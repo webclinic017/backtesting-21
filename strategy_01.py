@@ -217,7 +217,9 @@ class strategy_RB(bt.Strategy):
       self.log_to_csv(data=d, log_type="LOG_NEXT")
 
   def stop(self):
-    
+    for i, d in enumerate(self.datas):
+      self.close(d)
+
     self.file_log.close()
     self.csv_log.close()
 
