@@ -11,6 +11,7 @@ import backtrader as bt
 
 from strategy_01 import *
 
+# Extract a bunch of historical data return a multi-index dataframe
 def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None): 
   #end_date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
   
@@ -25,6 +26,8 @@ def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None):
   else:
     return None
 
+
+### PREDEFINED DATASETS ###
 
 # Innovation fund companies listed
 ARKK_fund = pd.read_csv("https://raw.githubusercontent.com/poivronjaune/stock_screener/main/DATASETS/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv")
@@ -55,30 +58,36 @@ transportation   = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Transport
 #companies = ARKK_fund["Symbol"].to_list()
 companies = transportation["Symbol"].to_list()
 
+
+
 print(f"Fetching price data for {len(companies)} symbols")
-start_of_price_data   = "2018-01-01"                          # Historical data start_date
-end_of_price_data     = datetime.today().strftime('%Y-%m-%d') # Historical data end_date
-apply_strategy_on     = "2021-10-01"                          # Strategy apply date (skip price data before this date)
-minimum_data_required = 300                                   # Minimum price data that must be fetched for strategy to work
-                                                              # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
+start_of_price_data   = "2018-01-01"                                                            # Historical data start_date
+end_of_price_data     = datetime.today().strftime('%Y-%m-%d')                                   # Historical data end_date
+apply_strategy_on     = "2021-10-01"                                                            # Strategy apply date (skip price data before this date)
+minimum_data_required = 300                                                                     # Minimum price data that must be fetched for strategy to work
+                                                                                                # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
+
 prices = get_prices_for(companies, start_date=start_of_price_data, end_date=end_of_price_data)
 
-# SETUP Backtrader
+# SETUP Backtrader portfolio info and commisions
 cash = 3000
 cerebro = bt.Cerebro()
 cerebro.broker.set_cash(cash)
 cerebro.broker.setcommission(commission=0.001)
 print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
+# SETUP a strategy to run on our data
 cerebro.addstrategy(strategy_RB, apply_date=apply_strategy_on, risk_to_reward=1.53, hold=20, log_to_screen=True)
+# Buy a maximum of 10% of our portfolio value on each position
 cerebro.addsizer(bt.sizers.AllInSizer, percents=10)
+
 
 # ADD DATA FEEDS TO BACKTRADER
 if prices is not None:
   print(f"DEBUG: Price data fetched...")
   for symbol in companies:
     price_data = prices[symbol].dropna(axis=0, how='all')
-    # Get rid of invalid symbols
+    # Get rid of invalid symbols or symbols with with insuficient historical data
     if len(price_data) > minimum_data_required:
       data = bt.feeds.PandasData(dataname=price_data)
       cerebro.adddata(data=data, name=symbol)
@@ -88,8 +97,9 @@ else:
 
 run_result = cerebro.run()
 print('\n\nEnding Portfolio Value: %.2f' % cerebro.broker.getvalue())
+
+# Plotting only works with a few companies
 #cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
 
 print(f"End of backtest")
-
 
