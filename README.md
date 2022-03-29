@@ -22,8 +22,8 @@ Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screen
 
 
 ## Strategy
-The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicators). Change this file to use your own strategy.  
-This strategy uses a ``bracket_order`` yo to buy at merket value, automatically set a stop lost based on 2*ATR and a take_profit value of 1.5 times risk to reward.
+The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicator). Change this file to use your own strategy.  
+This strategy uses a ``bracket_order`` to buy at market value, automatically sets a stop lost based on 2*ATR and a take profit value based on a 1.5 times risk to reward ratio.  
 
 ## Backtrader documentation
 [Package documentation](https://www.backtrader.com/docu/)
@@ -32,13 +32,13 @@ This strategy uses a ``bracket_order`` yo to buy at merket value, automatically 
 ## Installation  
 ``python venv env``  
 ``python -m pip install --upgrade pip``  
-``pip istall -r requirements.txt``  
+``pip install -r requirements.txt``  
 
 ## Running
 Adjust your symbols list by changing this line ``companies = transportation["Symbol"].to_list()``  using one of the list from the predefined datasets
 Run the script using ``python app.py``  
 
-A log file ``log_strategy-date-time.txt`` will be creayed to see how the strategy was applied
+A log file ``log_strategy-date-time.txt`` will be created to see how the strategy was applied. The screen log can be turned off using the ``log_to_screen=False`` parameter in the ``cerebro.addstrategy(log_to_screen=False)`` command.
 
 
 #### Custom indicator credit  
