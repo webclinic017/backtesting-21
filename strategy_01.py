@@ -26,9 +26,6 @@ class strategy_RB(bt.Strategy):
       self.csv_log  = open(f"LOG_CSV\csv_log-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
       self.log_to_csv(write_header=True)
 
-    # Property to store active symbol data for log functions (TODO: improve this)
-    self.active_symbol = None
-
     # Property to store all indicators by ymbol data
     self.inds = dict()
     print(f"Len of self.datas: {len(self.datas)}")
@@ -197,7 +194,6 @@ class strategy_RB(bt.Strategy):
 
     # Loop through each data set loaded for strategy
     for i, d in enumerate(self.datas):
-      self.active_symbol = d # Used to simply logging functions
       dt, dn = self.datetime.date(), d._name
       pos = self.getposition(d).size
     
@@ -221,5 +217,6 @@ class strategy_RB(bt.Strategy):
       self.log_to_csv(data=d, log_type="LOG_NEXT")
 
   def stop(self):
+    
     self.file_log.close()
     self.csv_log.close()
