@@ -20,13 +20,16 @@ class strategy_RB(bt.Strategy):
   )
 
   def __init__(self):
-    # TODO: Adjust to respect log flags and not create non required files
-    # Create log default files
+    # Create defaut log files (TODO: adapt to create only when flags are true)
     if self.p.log_to_file:
       self.file_log = open(f"LOG_TXT\log_strategy-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
       self.csv_log  = open(f"LOG_CSV\csv_log-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
-      self.csv_log.write(f"date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;price;stop_loss;target;EMA200;EMA20;ATR;SuperTrend\n")
+      self.log_to_csv(write_header=True)
 
+    # Property to store active symbol data for log functions (TODO: improve this)
+    self.active_symbol = None
+
+    # Property to store all indicators by ymbol data
     self.inds = dict()
     print(f"Len of self.datas: {len(self.datas)}")
     for i, d in enumerate(self.datas):
@@ -40,46 +43,79 @@ class strategy_RB(bt.Strategy):
 
 
   # LOG FUNCTIONS
-  def log_to_csv(self, data=None, indicators= None, log_type=None, order=None, order_data=None):
+  def log_to_csv(self, data=None, log_type=None, order=None, order_data=None, write_header=False):
     ''' Logging function to produce a CSV file for later import and analysis 
-        date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;price;stop_loss;target;EMA200;EMA20;ATR;SuperTrend
+        date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;EMA200;EMA20;ATR;SuperTrend
     '''
+    if not self.log_to_csv:
+      return
+
+    if write_header:
+       self.csv_log.write(f"date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;EMA200;EMA20;ATR;SuperTrend\n")
+       return
+
+    symbol_data = None
     if data is not None:
-      dt = data.datetime.date(0)
+      symbol_data = data
+
+    if order is not None:
+      symbol_data = order.data
+
+    if symbol_data is not None:
+      dt = symbol_data.datetime.date(0)
       date_str     = f"{dt.isoformat()}"
-      symbol_str   = f"{data._name}"
-      position_str = f"{self.getposition(data).size:.2f}"
-      open_str     = f"{data.open[0]}"
-      high_str     = f"{data.high[0]}"
-      low_str      = f"{data.low[0]}"
-      close_str    = f"{data.close[0]}"
-      volume_str   = f"{data.volume[0]}"
+      symbol_str   = f"{symbol_data._name}"
+      position_str = f"{self.getposition(symbol_data).size:.2f}"
+      open_str     = f"{symbol_data.open[0]:.2f}"
+      high_str     = f"{symbol_data.high[0]:.2f}"
+      low_str      = f"{symbol_data.low[0]:.2f}"
+      close_str    = f"{symbol_data.close[0]:.2f}"
+      volume_str   = f"{symbol_data.volume[0]:.0f}"
+
+      EMA200_str     = f"{self.inds[symbol_data]['ema2'][0]:.2f}"
+      EMA20_str      = f"{0}"
+      ATR_str        = f"{0}"
+      SuperTrend_str = f"{0}"
     else:
-      date_str     = ""
-      symbol_str   = ""
-      position_str = ""
-      open_str     = ""
-      high_str     = ""
-      low_str      = ""
-      close_str    = ""
-      volume_str   = ""
+      # Something wrong bad data available
+      return
 
     if log_type is not None:
       log_type   = f"{log_type}"
     else:
       log_type   = ""
 
+    if order is not None:
+      order_ref_str    = f"{order.ref}"
+      order_name_str   = f"{order.getordername()}"
+      order_type_str   = f"{order.ordtypename()}"
+      order_status_str = f"{order.getstatusname()}"
+    else:
+      order_ref_str    = ""
+      order_name_str   = ""
+      order_type_str   = ""
+      order_status_str = ""
+
+    if order_data is not None:
+      order_price_str  = f"{order_data.price:.2f}"
+      order_size_str   = f"{order_data.size:.2f} "
+      order_value_str  = f"{order_data.value:.2f}"
+      order_comm_str   = f"{order_data.comm:.2f} "
+    else:
+      order_price_str  = f""
+      order_size_str   = f""
+      order_value_str  = f""
+      order_comm_str   = f""
+  
     sep = ";"
     empty_str = ""
-    log_str  = f"{date_str}{sep}{log_type}{sep}{symbol_str}{sep}{position_str}{sep}{open_str}{sep}{high_str}{sep}{low_str}{sep}{close_str}{sep}{volume_str}{sep}"
-    log_str += f"{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}"
-    log_str += f"{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}\n"
-    #self.csv_log.write(log_str)
-
-    # order_ref;order_name;order_status;price;stop_loss;target;
+    # date;log_type;symbol;position;open;high;low;close;volume;
+    # order_ref;order_name;order_status;order_price;order_size;order_value;order_commission
     # EMA200;EMA20;ATR;SuperTrend
-
-
+    log_str  = f"{date_str}{sep}{log_type}{sep}{symbol_str}{sep}{position_str}{sep}{open_str}{sep}{high_str}{sep}{low_str}{sep}{close_str}{sep}{volume_str}{sep}"
+    log_str += f"{order_ref_str}{sep}{order_name_str}{sep}{order_type_str}{sep}{order_status_str}{sep}{order_price_str}{sep}{order_size_str}{sep}{order_value_str}{sep}{order_comm_str}{sep}"
+    log_str += f"{EMA200_str}{sep}{EMA20_str}{sep}{ATR_str}{sep}{SuperTrend_str}{sep}\n"
+    self.csv_log.write(log_str)
 
   def log_next(self, data, dt=None):
     ''' Logging function for this strategy'''
@@ -140,6 +176,8 @@ class strategy_RB(bt.Strategy):
   def notify_order(self, order):
     order_data = order.executed if order.status in [order.Completed, order.Partial] else order.created
     self.log_order(order, order_data)
+    self.log_to_csv(log_type="NOTIFY_ORDER", order=order, order_data=order_data)
+    
 
   def buy_conditions(self, data):
     cond_01 = data.close[0] > self.inds[data]['ema2'][0]                                                  # Price above EMA200
@@ -159,6 +197,7 @@ class strategy_RB(bt.Strategy):
 
     # Loop through each data set loaded for strategy
     for i, d in enumerate(self.datas):
+      self.active_symbol = d # Used to simply logging functions
       dt, dn = self.datetime.date(), d._name
       pos = self.getposition(d).size
     
@@ -170,7 +209,7 @@ class strategy_RB(bt.Strategy):
           take_profit = buy_price + (buy_price - stop_loss) * self.p.risk_to_reward
           
           #orders = self.buy_bracket(price=buy_price, valid=self.max_hold_date, stopprice=stop_loss, limitprice=take_profit)          
-          orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit)          
+          orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market)          
           action_str = f"Estimated Market Price:{buy_price:.2f}, Stop:{stop_loss:.2f}, Target:{take_profit:.2f} "
           self.log_buy(d, action_str)
       else:
@@ -179,6 +218,8 @@ class strategy_RB(bt.Strategy):
 
       # Print results to log
       self.log_next(d)
+      self.log_to_csv(data=d, log_type="LOG_NEXT")
 
   def stop(self):
     self.file_log.close()
+    self.csv_log.close()
