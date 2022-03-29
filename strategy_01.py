@@ -220,3 +220,5 @@ class strategy_RB(bt.Strategy):
     
     self.file_log.close()
     self.csv_log.close()
+
+#
