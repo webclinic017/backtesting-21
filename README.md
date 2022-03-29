@@ -22,7 +22,7 @@ Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screen
 
 
 ## Strategy
-The file ``strategy_01.py`` contains the code loop to execute the strategy (incuding some custom indicators). Change this file to use your own strategy.
+The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicators). Change this file to use your own strategy.
 
 ## Backtrader documentation
 [Package documentation](https://www.backtrader.com/docu/)
@@ -38,3 +38,7 @@ Adjust your symbols list by changing this line ``companies = transportation["Sym
 Run the script using ``python app.py``  
 
 A log file ``log_strategy-date-time.txt`` will be creayed to see how the strategy was applied
+
+
+#### Custom indicator credit  
+mementun's github [repo](https://github.com/mementum/backtrader/pull/374/files)
