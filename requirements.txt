@@ -1,0 +1,6 @@
+pandas_ta
+yfinance
+backtrader
+
+pandas
+matplotlib
