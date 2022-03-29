@@ -31,19 +31,19 @@ This strategy uses a ``bracket_order`` to buy at market value, automatically set
 
 ## Installation  
 Make sure [git](https://gitforwindows.org/) and [python 3+](https://www.python.org/downloads/) are installed on your machine  
-``git clone git@github.com:poivronjaune/backtesting.git`` using SSH
-``git clone https://github.com/poivronjaune/backtesting.git`` using HTTPS
-``cd backtesting``
-``python -m venv env``  or ``py -m venv env``
-``env\Scripts\Acivate`` (windows)
-``python -m pip install --upgrade pip`` or ``py -m pip install --upgrade pip``
+``git clone git@github.com:poivronjaune/backtesting.git`` using SSH  
+``git clone https://github.com/poivronjaune/backtesting.git`` using HTTPS  
+``cd backtesting``  
+``python -m venv env``  or ``py -m venv env``  
+``env\Scripts\Acivate`` (windows)  
+``python -m pip install --upgrade pip`` or ``py -m pip install --upgrade pip``  
 ``pip install -r requirements.txt``  
-
+  
 tip: removing all packages from virtual environment  
-``pip freeze > remove.txt``
-``pip uninstall -y -r remove.txt``
-
-
+``pip freeze > remove.txt``  
+``pip uninstall -y -r remove.txt``  
+  
+  
 ## Running
 Adjust your symbols list by changing this line ``companies = transportation["Symbol"].to_list()``  using one of the list from the predefined datasets
 Run the script using ``python app.py``  
