@@ -42,4 +42,4 @@ A log file ``log_strategy-date-time.txt`` will be created to see how the strateg
 
 
 #### Custom indicator credit  
-mementun's github [repo](https://github.com/mementum/backtrader/pull/374/files)
+mementum's github [repo](https://github.com/mementum/backtrader/pull/374/files)
