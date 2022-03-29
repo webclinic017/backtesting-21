@@ -37,7 +37,7 @@ or
   
 - ``cd backtesting``  
 - ``python -m venv env``  or ``py -m venv env``  
-- ``env\Scripts\Acivate`` (windows)  
+- ``env\Scripts\Activate`` (windows)  
 - ``python -m pip install --upgrade pip`` or ``py -m pip install --upgrade pip``  
 - ``pip install -r requirements.txt``  
   
