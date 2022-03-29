@@ -22,7 +22,8 @@ Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screen
 
 
 ## Strategy
-The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicators). Change this file to use your own strategy.
+The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicators). Change this file to use your own strategy.  
+This strategy uses a ``bracket_order`` yo to buy at merket value, automatically set a stop lost based on 2*ATR and a take_profit value of 1.5 times risk to reward.
 
 ## Backtrader documentation
 [Package documentation](https://www.backtrader.com/docu/)
@@ -34,7 +35,7 @@ The file ``strategy_01.py`` contains the code loop to execute the strategy (incl
 ``pip istall -r requirements.txt``  
 
 ## Running
-Adjust your symbols list by changing this line ``companies = transportation["Symbol"].to_list()``
+Adjust your symbols list by changing this line ``companies = transportation["Symbol"].to_list()``  using one of the list from the predefined datasets
 Run the script using ``python app.py``  
 
 A log file ``log_strategy-date-time.txt`` will be creayed to see how the strategy was applied
