@@ -171,13 +171,6 @@ class strategy_RB(bt.Strategy):
           action_str = "Sell"
 
       # Print results to log
-      #txt =  f"[Position:{pos:.2f}][action:{action_str}]"
-      #txt += f"\n- Price:{d.close[0]:.2f},"
-      #txt += f"\n- EMA20(Blue):{self.inds[d]['ema1'][0]:.2f}, EMA200(Yellow):{self.inds[d]['ema2'][0]:.2f}"
-      #txt += f"\n- EMACross:{self.inds[d]['cross'][0]}"
-      #txt += f"\n- ATR:{self.inds[d]['atr'][0]:.2f}"
-      #txt += f"\n- SuperTrend(Red/Green):{self.inds[d]['supertrend'][0]:.2f}"
-      #txt += f"\n"
       self.log_next(d, action_str)
 
   def stop(self):
