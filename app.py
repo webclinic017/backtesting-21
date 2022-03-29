@@ -54,9 +54,9 @@ transportation   = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Transport
 
 ### ADJUST THIS SECTION TO USE YOUR SYMBOLS LIST ###
 #companies = ['ORCL','ZM', 'MSFT', 'AAPL', 'GATEU'] # For testing purposes
-#companies = ['ORCL', 'AAPL', 'GATEU']
+companies = ['ORCL', 'AAPL', 'GATEU']
 #companies = ARKK_fund["Symbol"].to_list()
-companies = transportation["Symbol"].to_list()
+#companies = transportation["Symbol"].to_list()
 
 
 

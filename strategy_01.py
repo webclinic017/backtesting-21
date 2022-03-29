@@ -1,66 +1,7 @@
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta, date
 import backtrader as bt
 
-
-# TODO: Move thos Indicator Code to a new files
-class SuperTrendBand(bt.Indicator):
-  """
-  Helper inidcator for Supertrend indicator
-  """
-  params = (('period',10),('multiplier',3))
-  lines = ('basic_ub','basic_lb','final_ub','final_lb')
-
-  def __init__(self):
-    self.l.atr = bt.indicators.AverageTrueRange(self.data, period=self.p.period)
-    self.l.basic_ub = ((self.data.high + self.data.low) / 2) + (self.l.atr * self.p.multiplier)
-    self.l.basic_lb = ((self.data.high + self.data.low) / 2) - (self.l.atr * self.p.multiplier)
-
-  def next(self):
-    if len(self)-1 == self.p.period:
-      self.l.final_ub[0] = self.l.basic_ub[0]
-      self.l.final_lb[0] = self.l.basic_lb[0]
-    else:
-      #=IF(OR(basic_ub<final_ub*,close*>final_ub*),basic_ub,final_ub*)
-      if self.l.basic_ub[0] < self.l.final_ub[-1] or self.data.close[-1] > self.l.final_ub[-1]:
-        self.l.final_ub[0] = self.l.basic_ub[0]
-      else:
-        self.l.final_ub[0] = self.l.final_ub[-1]
-
-      #=IF(OR(baisc_lb > final_lb *, close * < final_lb *), basic_lb *, final_lb *)
-      if self.l.basic_lb[0] > self.l.final_lb[-1] or self.data.close[-1] < self.l.final_lb[-1]:
-        self.l.final_lb[0] = self.l.basic_lb[0]
-      else:
-        self.l.final_lb[0] = self.l.final_lb[-1]
-
-class SuperTrend(bt.Indicator):
-  """
-  Super Trend indicator
-  """
-  params = (('period', 10), ('multiplier', 3))
-  lines = ('super_trend',)
-  plotinfo = dict(subplot=False)
-
-  def __init__(self):
-    self.stb = SuperTrendBand(self.data, period = self.p.period, multiplier = self.p.multiplier)
-
-  def next(self):
-    if len(self) - 1 == self.p.period:
-      self.l.super_trend[0] = self.stb.final_ub[0]
-      return
-
-    if self.l.super_trend[-1] == self.stb.final_ub[-1]:
-      if self.data.close[0] <= self.stb.final_ub[0]:
-        self.l.super_trend[0] = self.stb.final_ub[0]
-      else:
-        self.l.super_trend[0] = self.stb.final_lb[0]
-
-    if self.l.super_trend[-1] == self.stb.final_lb[-1]:
-      if self.data.close[0] >= self.stb.final_lb[0]:
-        self.l.super_trend[0] = self.stb.final_lb[0]
-      else:
-        self.l.super_trend[0] = self.stb.final_ub[0]
-
-
+from custom_indicators import *
 
 class strategy_RB(bt.Strategy):
   # self.params or self.p (are identical)
@@ -71,17 +12,80 @@ class strategy_RB(bt.Strategy):
       ('hold', 10),
       ('log_to_screen', False),
       ('log_to_file', True),
+      ('log_to_csv', True),
       ('ema1', 20),
       ('ema2', 200),
       ('atr', 14),
       ('stperiod', 10),
   )
 
-  def log_next(self, data, action_str, dt=None):
+  def __init__(self):
+    # TODO: Adjust to respect log flags and not create non required files
+    # Create log default files
+    if self.p.log_to_file:
+      self.file_log = open(f"LOG_TXT\log_strategy-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
+      self.csv_log  = open(f"LOG_CSV\csv_log-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
+      self.csv_log.write(f"date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;price;stop_loss;target;EMA200;EMA20;ATR;SuperTrend\n")
+
+    self.inds = dict()
+    print(f"Len of self.datas: {len(self.datas)}")
+    for i, d in enumerate(self.datas):
+      self.inds[d] = dict()
+      self.inds[d]['ema1']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema1)  # Short EMA 20
+      self.inds[d]['ema2']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema2)  # Long  EMA 200
+      #self.inds[d]['cross']      = bt.indicators.CrossOver(self.inds[d]['ema1'],self.inds[d]['ema2'])
+      self.inds[d]['atr']        = bt.indicators.AverageTrueRange(d, period=self.params.atr)
+      self.inds[d]['supertrend'] = SuperTrend(d, period=self.params.stperiod)
+
+
+
+  # LOG FUNCTIONS
+  def log_to_csv(self, data=None, indicators= None, log_type=None, order=None, order_data=None):
+    ''' Logging function to produce a CSV file for later import and analysis 
+        date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;price;stop_loss;target;EMA200;EMA20;ATR;SuperTrend
+    '''
+    if data is not None:
+      dt = data.datetime.date(0)
+      date_str     = f"{dt.isoformat()}"
+      symbol_str   = f"{data._name}"
+      position_str = f"{self.getposition(data).size:.2f}"
+      open_str     = f"{data.open[0]}"
+      high_str     = f"{data.high[0]}"
+      low_str      = f"{data.low[0]}"
+      close_str    = f"{data.close[0]}"
+      volume_str   = f"{data.volume[0]}"
+    else:
+      date_str     = ""
+      symbol_str   = ""
+      position_str = ""
+      open_str     = ""
+      high_str     = ""
+      low_str      = ""
+      close_str    = ""
+      volume_str   = ""
+
+    if log_type is not None:
+      log_type   = f"{log_type}"
+    else:
+      log_type   = ""
+
+    sep = ";"
+    empty_str = ""
+    log_str  = f"{date_str}{sep}{log_type}{sep}{symbol_str}{sep}{position_str}{sep}{open_str}{sep}{high_str}{sep}{low_str}{sep}{close_str}{sep}{volume_str}{sep}"
+    log_str += f"{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}"
+    log_str += f"{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}{empty_str}{sep}\n"
+    #self.csv_log.write(log_str)
+
+    # order_ref;order_name;order_status;price;stop_loss;target;
+    # EMA200;EMA20;ATR;SuperTrend
+
+
+
+  def log_next(self, data, dt=None):
     ''' Logging function for this strategy'''
     dt = dt or data.datetime.date(0)
     #log_str = f"{dt.isoformat()}, {data._name.ljust(6)} [Portfolio Value:{self.broker.getvalue():.2f}]{txt}\n"
-    log_str  = f"{dt.isoformat()} LOG_ACTION   ["
+    log_str  = f"{dt.isoformat()} LOG_NEXT     ["
     log_str += f"Symbol:{data._name}, "
     log_str += f"Position:{self.getposition(data).size:.2f}, "
     log_str += f"Price:{data.close[0]:.2f}, "
@@ -90,14 +94,28 @@ class strategy_RB(bt.Strategy):
     log_str += f"ATR:{self.inds[data]['atr'][0]:.2f}, "
     log_str += f"SuperTrend(Red/Green):{self.inds[data]['supertrend'][0]:.2f}"
     log_str += f"]"
-    if action_str is not "None":
-        log_str += f"\nAction: {data._name}, {action_str} "
     log_str += f"\n"
 
     if self.p.log_to_screen:
       print(log_str)
     if self.p.log_to_file:
       self.file_log.write(log_str)
+
+  def log_buy(self, data, action_str, dt=None):
+    dt = dt or data.datetime.date(0)
+    #log_str = f"{dt.isoformat()}, {data._name.ljust(6)} [Portfolio Value:{self.broker.getvalue():.2f}]{txt}\n"
+    log_str  = f"{dt.isoformat()} BUY_SIGNAL   ["
+    log_str += f"Symbol:{data._name}, "
+    log_str += f"Position:{self.getposition(data).size:.2f}, "
+    log_str += f"Action: {action_str} "
+    log_str += f"]"
+    log_str += f"\n"
+
+    if self.p.log_to_screen:
+      print(log_str)
+    if self.p.log_to_file:
+      self.file_log.write(log_str)
+
 
   def log_order(self, order, order_data):
       dt = order.data.datetime.date(0)
@@ -117,20 +135,8 @@ class strategy_RB(bt.Strategy):
       if self.p.log_to_file:
         self.file_log.write(log_str)
 
-  def __init__(self):
-    if self.p.log_to_file:
-      self.file_log = open(f"log_strategy-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
 
-    self.inds = dict()
-    print(f"Len of self.datas: {len(self.datas)}")
-    for i, d in enumerate(self.datas):
-      self.inds[d] = dict()
-      self.inds[d]['ema1']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema1)  # Short EMA 20
-      self.inds[d]['ema2']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema2)  # Long  EMA 200
-      #self.inds[d]['cross']      = bt.indicators.CrossOver(self.inds[d]['ema1'],self.inds[d]['ema2'])
-      self.inds[d]['atr']        = bt.indicators.AverageTrueRange(d, period=self.params.atr)
-      self.inds[d]['supertrend'] = SuperTrend(d, period=self.params.stperiod)
-
+  # STRATEGY FUNCTIONS
   def notify_order(self, order):
     order_data = order.executed if order.status in [order.Completed, order.Partial] else order.created
     self.log_order(order, order_data)
@@ -165,14 +171,14 @@ class strategy_RB(bt.Strategy):
           
           #orders = self.buy_bracket(price=buy_price, valid=self.max_hold_date, stopprice=stop_loss, limitprice=take_profit)          
           orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit)          
-          action_str = f"Buy:{buy_price:.2f},s:{stop_loss:.2f},t:{take_profit:.2f} "
+          action_str = f"Estimated Market Price:{buy_price:.2f}, Stop:{stop_loss:.2f}, Target:{take_profit:.2f} "
+          self.log_buy(d, action_str)
       else:
         if self.sell_conditions(d):
           action_str = "Sell"
 
       # Print results to log
-      self.log_next(d, action_str)
+      self.log_next(d)
 
   def stop(self):
-    self.close()
     self.file_log.close()
