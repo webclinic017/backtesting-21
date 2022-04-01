@@ -29,7 +29,7 @@ def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None):
 
 
 if __name__ == "__main__":
-  ### PREDEFINED DATASETS ###
+  ### PREDEFINED DATASETS ####
   
   # Innovation fund companies listed
   ARKK_fund = pd.read_csv("https://raw.githubusercontent.com/poivronjaune/stock_screener/main/DATASETS/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv")
