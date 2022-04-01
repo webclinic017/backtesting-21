@@ -79,7 +79,7 @@ if __name__ == "__main__":
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
-  cerebro.addstrategy(strategy_RB, apply_date=apply_strategy_on, risk_to_reward=1.53, hold=20)
+  cerebro.addstrategy(strategy_RB, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
   # Buy a maximum of 10% of our portfolio value on each position
   cerebro.addsizer(bt.sizers.AllInSizer, percents=10)
   

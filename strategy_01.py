@@ -18,7 +18,7 @@ class strategy_RB(bt.Strategy):
   params = (
       ('apply_date', '2021-01-01'),
       ('risk_to_reward', 1.5),
-      ('hold', 10),
+      ('max_hold', 10),
       ('log_to_csv', True),
       ('ema1', 20),
       ('ema2', 200),
@@ -35,7 +35,11 @@ class strategy_RB(bt.Strategy):
     
     progress_bar_prefix = 'Indicators setup'.ljust(20, ' ')
     progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
-    # Property to store all indicators by ymbol data
+    
+    # Property to store the maximum hold date of a position by symbol data based on buy time
+    self.max_hold_dates = dict()
+
+    # Property to store all indicators by symbol data
     self.inds = dict()
     #print(f"Len of self.datas: {len(self.datas)}")
     for i, d in enumerate(self.datas):
@@ -47,44 +51,45 @@ class strategy_RB(bt.Strategy):
       #self.inds[d]['cross']      = bt.indicators.CrossOver(self.inds[d]['ema1'],self.inds[d]['ema2'])
       self.inds[d]['atr']        = bt.indicators.AverageTrueRange(d, period=self.params.atr)
       self.inds[d]['supertrend'] = SuperTrend(d, period=self.params.stperiod)
-    
 
 
-
-  # LOG FUNCTIONS
+  # LOG FUNCTION
   def log_to_csv(self, data=None, log_type=None, order=None, order_data=None, write_header=False):
     ''' Logging function to produce a CSV file for later import and analysis 
-        date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;EMA200;EMA20;ATR;SuperTrend
+        date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend
     '''
     if not self.log_to_csv:
       return
 
     if write_header:
-       self.csv_log.write(f"date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;EMA200;EMA20;ATR;SuperTrend\n")
+       self.csv_log.write(f"date;log_type;symbol;position;open;high;low;close;volume;order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend\n")
        return
 
     symbol_data = None
     if data is not None:
       symbol_data = data
+      
 
     if order is not None:
       symbol_data = order.data
 
     if symbol_data is not None:
       dt = symbol_data.datetime.date(0)
-      date_str     = f"{dt.isoformat()}"
-      symbol_str   = f"{symbol_data._name}"
-      position_str = f"{self.getposition(symbol_data).size:.2f}"
-      open_str     = f"{symbol_data.open[0]:.2f}"
-      high_str     = f"{symbol_data.high[0]:.2f}"
-      low_str      = f"{symbol_data.low[0]:.2f}"
-      close_str    = f"{symbol_data.close[0]:.2f}"
-      volume_str   = f"{symbol_data.volume[0]:.0f}"
+      date_str          = f"{dt.isoformat()}"
+      symbol_str        = f"{symbol_data._name}"
+      position_str      = f"{self.getposition(symbol_data).size:.2f}"
+      open_str          = f"{symbol_data.open[0]:.2f}"
+      high_str          = f"{symbol_data.high[0]:.2f}"
+      low_str           = f"{symbol_data.low[0]:.2f}"
+      close_str         = f"{symbol_data.close[0]:.2f}"
+      volume_str        = f"{symbol_data.volume[0]:.0f}"
 
-      EMA200_str     = f"{self.inds[symbol_data]['ema2'][0]:.2f}"
-      EMA20_str      = f"{self.inds[symbol_data]['ema1'][0]:.2f}"
-      ATR_str        = f"{self.inds[symbol_data]['atr'][0]:.2f}"
-      supertrend_str = f"{self.inds[symbol_data]['supertrend'][0]:.2f}"
+      max_hold_date_str = f"{'' if self.max_hold_dates[symbol_data._name] == None else self.max_hold_dates[symbol_data._name]}"
+
+      EMA200_str        = f"{self.inds[symbol_data]['ema2'][0]:.2f}"
+      EMA20_str         = f"{self.inds[symbol_data]['ema1'][0]:.2f}"
+      ATR_str           = f"{self.inds[symbol_data]['atr'][0]:.2f}"
+      supertrend_str    = f"{self.inds[symbol_data]['supertrend'][0]:.2f}"
     else:
       # Something wrong bad data available
       return
@@ -122,7 +127,7 @@ class strategy_RB(bt.Strategy):
     # order_ref;order_name;order_status;order_price;order_size;order_value;order_commission
     # EMA200;EMA20;ATR;SuperTrend
     log_str  = f"{date_str}{sep}{log_type}{sep}{symbol_str}{sep}{position_str}{sep}{open_str}{sep}{high_str}{sep}{low_str}{sep}{close_str}{sep}{volume_str}{sep}"
-    log_str += f"{order_ref_str}{sep}{order_name_str}{sep}{order_type_str}{sep}{order_status_str}{sep}{order_price_str}{sep}{order_size_str}{sep}{order_value_str}{sep}{order_comm_str}{sep}"
+    log_str += f"{order_ref_str}{sep}{order_name_str}{sep}{order_type_str}{sep}{order_status_str}{sep}{order_price_str}{sep}{order_size_str}{sep}{order_value_str}{sep}{order_comm_str}{sep}{max_hold_date_str}{sep}"
     log_str += f"{EMA200_str}{sep}{EMA20_str}{sep}{ATR_str}{sep}{supertrend_str}{sep}\n"
     self.csv_log.write(log_str)
 
@@ -166,9 +171,12 @@ class strategy_RB(bt.Strategy):
           buy_price   = d.close[0]
           stop_loss   = buy_price - 2 * self.inds[d]['atr'][0]
           take_profit = buy_price + (buy_price - stop_loss) * self.p.risk_to_reward
-          
+          max_hold_date = dt + timedelta(days=self.p.max_hold)
+          self.max_hold_dates[d._name] = max_hold_date
           #orders = self.buy_bracket(price=buy_price, valid=self.max_hold_date, stopprice=stop_loss, limitprice=take_profit)          
           orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market)          
+        else:
+          self.max_hold_dates[d._name] = None
       else:
         if self.sell_conditions(d):
           pass
