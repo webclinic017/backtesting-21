@@ -50,7 +50,7 @@ tip: removing all packages from virtual environment
 Adjust your symbols list by changing this line ``companies = transportation["Symbol"].to_list()``  using one of the list from the predefined datasets
 Run the script using ``python app.py``  
 
-A log file ``log_strategy-date-time.txt`` will be created to see how the strategy was applied. The screen log can be turned off using the ``log_to_screen=False`` parameter in the ``cerebro.addstrategy(log_to_screen=False)`` command.
+A folder named LOG_CSV will contain a csv log file ``csv_log-datetime.csv`` of how the strategy was applied. Use a spreadsheet to import, filter and analyse your results. A ``log_to_csv`` flag set to False can prevent the creation of this csv file.
 
 
 #### Custom indicator credit  
