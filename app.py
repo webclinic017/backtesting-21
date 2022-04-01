@@ -56,9 +56,9 @@ if __name__ == "__main__":
   
   ### ADJUST THIS SECTION TO USE YOUR SYMBOLS LIST ###
   #companies = ['ORCL','ZM', 'MSFT', 'AAPL', 'GATEU'] # For testing purposes
-  #companies = ['ORCL', 'AAPL', 'GATEU']
+  companies = ['ORCL', 'AAPL', 'GATEU']
   #companies = ARKK_fund["Symbol"].to_list()
-  companies = technology["Symbol"].to_list()
+  #companies = technology["Symbol"].to_list()
   
   
   
@@ -79,7 +79,7 @@ if __name__ == "__main__":
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
-  cerebro.addstrategy(strategy_RB, apply_date=apply_strategy_on, risk_to_reward=1.53, hold=20, log_to_screen=True)
+  cerebro.addstrategy(strategy_RB, apply_date=apply_strategy_on, risk_to_reward=1.53, hold=20)
   # Buy a maximum of 10% of our portfolio value on each position
   cerebro.addsizer(bt.sizers.AllInSizer, percents=10)
   

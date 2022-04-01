@@ -19,8 +19,6 @@ class strategy_RB(bt.Strategy):
       ('apply_date', '2021-01-01'),
       ('risk_to_reward', 1.5),
       ('hold', 10),
-      ('log_to_screen', False),
-      ('log_to_file', True),
       ('log_to_csv', True),
       ('ema1', 20),
       ('ema2', 200),
@@ -30,7 +28,7 @@ class strategy_RB(bt.Strategy):
 
   def __init__(self):
     # Create defaut log files (TODO: adapt to create only when flags are true)
-    if self.p.log_to_file:
+    if self.p.log_to_csv:
       self.csv_log  = open(f"LOG_CSV\csv_log-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv","w")
       self.log_to_csv(write_header=True)
 
