@@ -23,7 +23,7 @@ Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screen
 
 ## Strategy
 The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicator). Change this file to use your own strategy.  
-This strategy uses a ``bracket_order`` to buy at market value, automatically sets a stop lost based on 2*ATR and a take profit value based on a 1.5 times risk to reward ratio.  
+This strategy uses a ``bracket_order`` to buy at market value, automatically sets a stop lost based on 2*ATR and a take profit value based on a 1.5 times risk to reward ratio. Also this strategy will close position after a position has been held for a maximum od 20 days. (We assume the historical prices data is a daily timeframe)  
 
 ## Backtrader documentation
 [Package documentation](https://www.backtrader.com/docu/)
