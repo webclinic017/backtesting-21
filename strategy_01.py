@@ -146,6 +146,11 @@ class strategy_RB(bt.Strategy):
     return cond_01 & cond_02 & cond_03
 
   def sell_conditions(self, data):
+    # The only sell condition is if we hold our position for more time than max_hold_date
+    if self.max_hold_dates[data._name] is not None:
+      if data.datetime.date() >= self.max_hold_dates[data._name]:
+        return True
+
     return False
 
   def next(self):
@@ -165,7 +170,7 @@ class strategy_RB(bt.Strategy):
       progress_bar_prefix = f'Analysing {dt.isoformat()} : {d._name.upper()}'.ljust(40, ' ')
       progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
 
-      action_str = "None"
+      log_action = "BUG"
       if not pos:
         if self.buy_conditions(d):
           buy_price   = d.close[0]
@@ -174,15 +179,21 @@ class strategy_RB(bt.Strategy):
           max_hold_date = dt + timedelta(days=self.p.max_hold)
           self.max_hold_dates[d._name] = max_hold_date
           #orders = self.buy_bracket(price=buy_price, valid=self.max_hold_date, stopprice=stop_loss, limitprice=take_profit)          
-          orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market)          
+          orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market, valid=max_hold_date)          
+          log_action = "LOG_BUY"
         else:
           self.max_hold_dates[d._name] = None
+          log_action = "LOG_NEXT"
       else:
         if self.sell_conditions(d):
-          pass
+          self.close(d)
+          self.max_hold_dates[d._name] = None
+          log_action = "LOG_CLOSE"
+        else:
+          log_action = "LOG_NEXT"
 
       # Print results to csv_log
-      self.log_to_csv(data=d, log_type="LOG_NEXT")
+      self.log_to_csv(data=d, log_type=log_action)      
 
   def stop(self):
     for i, d in enumerate(self.datas):
