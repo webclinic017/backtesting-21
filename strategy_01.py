@@ -91,7 +91,7 @@ class strategy_RB(bt.Strategy):
       ATR_str           = f"{self.inds[symbol_data]['atr'][0]:.2f}"
       supertrend_str    = f"{self.inds[symbol_data]['supertrend'][0]:.2f}"
     else:
-      # Something wrong bad data available #
+      # Something wrong bad data available
       return
 
     if log_type is not None:
