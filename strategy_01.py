@@ -31,7 +31,7 @@ class strategy_RB(bt.Strategy):
   def __init__(self):
     # Create defaut log files (TODO: adapt to create only when flags are true)
     if self.p.log_to_file:
-      self.csv_log  = open(f"LOG_CSV\csv_log-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt","w")
+      self.csv_log  = open(f"LOG_CSV\csv_log-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv","w")
       self.log_to_csv(write_header=True)
 
     
