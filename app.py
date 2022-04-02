@@ -65,7 +65,7 @@ if __name__ == "__main__":
   print(f"Fetching price data for {len(companies)} symbols")
   start_of_price_data   = "2018-01-01"                                                            # Historical data start_date
   end_of_price_data     = datetime.today().strftime('%Y-%m-%d')                                   # Historical data end_date
-  apply_strategy_on     = "2021-10-01"                                                            # Strategy apply date (skip price data before this date)
+  apply_strategy_on     = "2021-01-01"                                                            # Strategy apply date (skip price data before this date)
   minimum_data_required = 300                                                                     # Minimum price data that must be fetched for strategy to work
                                                                                                   # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
   
@@ -79,11 +79,15 @@ if __name__ == "__main__":
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
-  cerebro.addstrategy(strategy_RB, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
+  cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
   # Buy a maximum of 10% of our portfolio value on each position
-  cerebro.addsizer(bt.sizers.AllInSizer, percents=10)
+  cerebro.addsizer(bt.sizers.AllInSizer, percents=50)
   
-  
+  cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+  cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DrawDown')
+  cerebro.addanalyzer(bt.analyzers.Calmar, _name='Calmar')
+  cerebro.addanalyzer(bt.analyzers.SQN, _name='SQN')
+
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:
     print(f"DEBUG: Price data fetched...")
@@ -97,11 +101,19 @@ if __name__ == "__main__":
   else:
     print(f"Aborted: No price data fetched, please check ticker symbols")
   
-  run_result = cerebro.run()
-  print('\n\nEnding Portfolio Value: %.2f' % cerebro.broker.getvalue())
+  thestrats = cerebro.run()
+  print(f"TheStrats: {len(thestrats)}")
+  thestrat = thestrats[0]
+  print(f"\n\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
+
+
+  print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
   
+
+
   # Plotting only works with a few companies
-  #cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
-  
+  cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
+  #cerebro.plot()
+
   print(f"End of backtest")
 

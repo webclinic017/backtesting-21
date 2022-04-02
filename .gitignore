@@ -1,6 +1,6 @@
 # Local ignores
-log_strategy*.*
-csv_log*.*
+log_*.*
+remove.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
