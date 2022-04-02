@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, date
 import backtrader as bt
 
-from strat_logger import *
+from strategy_logger import *
 from custom_indicators import *
 
 # TODO: COnvert this function to a class or integrate into the logger class

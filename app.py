@@ -27,17 +27,17 @@ def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None):
     return None
 
 
-
-if __name__ == "__main__":
-  ### PREDEFINED DATASETS ####
-  
+def ARKK_funds():
   # Innovation fund companies listed
   ARKK_fund = pd.read_csv("https://raw.githubusercontent.com/poivronjaune/stock_screener/main/DATASETS/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv")
   ARKK_fund.rename(columns={'ticker':'Symbol'}, inplace=True)
   ARKK_fund = ARKK_fund.dropna()
   
-  # ARKK_fund["Symbol"].to_list()
-  # Symbols lists
+  ARKK_funds = ARKK_fund["Symbol"].to_list()
+
+  return ARKK_funds
+
+def NASDAQ():
   nasdaq_companies = pd.read_csv("https://raw.githubusercontent.com/poivronjaune/stock_screener/main/DATASETS/NASDAQ.csv")
   no_sector        = nasdaq_companies.loc[nasdaq_companies['Sector'].isna()].copy()
   basic_industries = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Basic Industries"].copy()
@@ -52,30 +52,58 @@ if __name__ == "__main__":
   public_utilities = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Public Utilities"].copy()
   technology       = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Technology"].copy()
   transportation   = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Transportation"].copy()
+
+  NASDAQ_dict = dict()
+  NASDAQ_dict["all"]               = nasdaq_companies["Symbol"].to_list()
+  NASDAQ_dict["basic_industies"]   = basic_industries["Symbol"].to_list()
+  NASDAQ_dict["capital_goods"]     = capital_goods["Symbol"].to_list()
+  NASDAQ_dict["consumer_durable"]  = consumer_durable["Symbol"].to_list()
+  NASDAQ_dict["consumer_non_dur"]  = consumer_non_dur["Symbol"].to_list()
+  NASDAQ_dict["consumer_services"] = consumer_services["Symbol"].to_list()
+  NASDAQ_dict["energy"]            = energy["Symbol"].to_list()
+  NASDAQ_dict["finance"]           = finance["Symbol"].to_list()
+  NASDAQ_dict["health_care"]       = health_care["Symbol"].to_list()
+  NASDAQ_dict["miscellaneous"]     = miscellaneous["Symbol"].to_list()
+  NASDAQ_dict["public_utilities"]  = public_utilities["Symbol"].to_list()
+  NASDAQ_dict["technology"]        = technology["Symbol"].to_list()
+  NASDAQ_dict["transportation"]    = transportation["Symbol"].to_list()
+
+  return NASDAQ_dict
+
+
+
+def main():
+  ### PREDEFINED DATASETS ####
   
+  # TODO: Add a UI window for 
+  # Choosing a symbols list
+  # Start date for price history
+  # End date for price history (default should be today())
+  # Date on wich to start applying the  strategy (should be between start and end date of price history)
+  # Cash amount to start simulation
+  # The broker's basic commission fee
   
   ### ADJUST THIS SECTION TO USE YOUR SYMBOLS LIST ###
-  #companies = ['ORCL','ZM', 'MSFT', 'AAPL', 'GATEU'] # For testing purposes
-  companies = ['ORCL', 'AAPL', 'GATEU']
-  #companies = ARKK_fund["Symbol"].to_list()
-  #companies = technology["Symbol"].to_list()
-  
-  
-  
+  #companies = ['ORCL', 'AAPL', 'GATEU']
+  ARKK_fund_list = ARKK_funds()
+  NASDAQ_groups = NASDAQ()
+  #companies = ARKK_fund_list
+  companies = NASDAQ_groups["transportation"]
+
   print(f"Fetching price data for {len(companies)} symbols")
   start_of_price_data   = "2018-01-01"                                                            # Historical data start_date
   end_of_price_data     = datetime.today().strftime('%Y-%m-%d')                                   # Historical data end_date
   apply_strategy_on     = "2021-01-01"                                                            # Strategy apply date (skip price data before this date)
   minimum_data_required = 300                                                                     # Minimum price data that must be fetched for strategy to work
                                                                                                   # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
-  
   prices = get_prices_for(companies, start_date=start_of_price_data, end_date=end_of_price_data)
   
   # SETUP Backtrader portfolio info and commisions
   cash = 3000
+  commission = 0.001
   cerebro = bt.Cerebro()
   cerebro.broker.set_cash(cash)
-  cerebro.broker.setcommission(commission=0.001)
+  cerebro.broker.setcommission(commission=commission)
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
@@ -108,12 +136,15 @@ if __name__ == "__main__":
 
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
-  
-
 
   # Plotting only works with a few companies
-  cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
+  #cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
   #cerebro.plot()
 
   print(f"End of backtest")
+
+
+
+if __name__ == "__main__":
+  main()
 
