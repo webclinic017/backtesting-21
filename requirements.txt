@@ -5,3 +5,5 @@ git+https://github.com/backtrader2/backtrader
 pandas
 matplotlib
 
+pysimplegui
+

@@ -80,9 +80,13 @@ if __name__ == "__main__":
   
   # SETUP a strategy to run on our data
   cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
+  
+  
   # Buy a maximum of 10% of our portfolio value on each position
   cerebro.addsizer(bt.sizers.AllInSizer, percents=50)
   
+  cerebro.addobserver(bt.observers.DrawDown)
+
   cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
   cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DrawDown')
   cerebro.addanalyzer(bt.analyzers.Calmar, _name='Calmar')
@@ -102,15 +106,14 @@ if __name__ == "__main__":
     print(f"Aborted: No price data fetched, please check ticker symbols")
   
   thestrats = cerebro.run()
-  print(f"TheStrats: {len(thestrats)}")
-  thestrat = thestrats[0]
-  print(f"\n\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
+  print(f"TheStrats: {len(thestrats)}\n")
+  for thestart in thestrats:
+    thestrat = thestrats[0]
+    print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
 
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
   
-
-
   # Plotting only works with a few companies
   cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
   #cerebro.plot()

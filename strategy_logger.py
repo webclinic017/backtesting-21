@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, date
 
-class StragetyLogger():
+class StrategyLogger():
 
   # TODO: Implement a log file header that is based on the indicators that were added in the strategy
   #       Loop on the keys of the indicators data
