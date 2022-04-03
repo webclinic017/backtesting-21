@@ -1,6 +1,5 @@
 # https://backtest-rookies.com/2017/08/22/backtrader-multiple-data-feeds-indicators/
 
-from datetime import datetime, timedelta 
 import pandas as pd
 import yfinance as yf
 import numpy as np
@@ -9,6 +8,9 @@ import matplotlib.pyplot as plt
 import pandas_ta as ta
 import backtrader as bt
 
+import gui as GUI
+
+from datetime import datetime, timedelta 
 from strategy_01 import *
 
 # Extract a bunch of historical data return a multi-index dataframe
@@ -73,22 +75,13 @@ def NASDAQ():
 
 
 def main():
-  ### PREDEFINED DATASETS ####
-  
-  # TODO: Add a UI window for 
-  # Choosing a symbols list
-  # Start date for price history
-  # End date for price history (default should be today())
-  # Date on wich to start applying the  strategy (should be between start and end date of price history)
-  # Cash amount to start simulation
-  # The broker's basic commission fee
-  
-  ### ADJUST THIS SECTION TO USE YOUR SYMBOLS LIST ###
   #companies = ['ORCL', 'AAPL', 'GATEU']
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
   #companies = ARKK_fund_list
   companies = NASDAQ_groups["transportation"]
+
+  GUI.show_gui()
 
   print(f"Fetching price data for {len(companies)} symbols")
   start_of_price_data   = "2018-01-01"                                                            # Historical data start_date
@@ -108,9 +101,13 @@ def main():
   
   # SETUP a strategy to run on our data
   cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
+  
+  
   # Buy a maximum of 10% of our portfolio value on each position
   cerebro.addsizer(bt.sizers.AllInSizer, percents=50)
   
+  cerebro.addobserver(bt.observers.DrawDown)
+
   cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
   cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DrawDown')
   cerebro.addanalyzer(bt.analyzers.Calmar, _name='Calmar')
@@ -130,9 +127,10 @@ def main():
     print(f"Aborted: No price data fetched, please check ticker symbols")
   
   thestrats = cerebro.run()
-  print(f"TheStrats: {len(thestrats)}")
-  thestrat = thestrats[0]
-  print(f"\n\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
+  print(f"TheStrats: {len(thestrats)}\n")
+  for thestart in thestrats:
+    thestrat = thestrats[0]
+    print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
 
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
@@ -142,7 +140,6 @@ def main():
   #cerebro.plot()
 
   print(f"End of backtest")
-
 
 
 if __name__ == "__main__":

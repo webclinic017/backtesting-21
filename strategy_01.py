@@ -3,6 +3,7 @@ import backtrader as bt
 
 from strategy_logger import *
 from custom_indicators import *
+from strategy_logger import StrategyLogger
 
 # TODO: COnvert this function to a class or integrate into the logger class
 def progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='>'):
@@ -31,7 +32,7 @@ class strategy_01(bt.Strategy):
   def __init__(self):
     # Create defaut log files (TODO: adapt to create only when flags are true)
     if self.p.log_to_csv:
-      self.csv_logger = StragetyLogger(logname="log_01", seperator=";")
+      self.csv_logger = StrategyLogger(logname="log_01", seperator=";")
 
     
     progress_bar_prefix = 'Indicators setup'.ljust(20, ' ')
