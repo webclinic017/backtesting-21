@@ -5,7 +5,7 @@ from strategy_logger import *
 from custom_indicators import *
 from strategy_logger import StrategyLogger
 
-# TODO: COnvert this function to a class or integrate into the logger class
+# TODO: Convert this function to a class or integrate into the logger class
 def progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='>'):
   percent       = ('{0:.' + str(decimals) + 'f}').format(100 * (iteration/float(total)))
   filled_length = int(length * iteration // total) # // = floor when dividing
