@@ -1,6 +1,5 @@
 # https://backtest-rookies.com/2017/08/22/backtrader-multiple-data-feeds-indicators/
 
-from datetime import datetime, timedelta 
 import pandas as pd
 import yfinance as yf
 import numpy as np
@@ -9,6 +8,9 @@ import matplotlib.pyplot as plt
 import pandas_ta as ta
 import backtrader as bt
 
+import gui as GUI
+
+from datetime import datetime, timedelta 
 from strategy_01 import *
 
 # Extract a bunch of historical data return a multi-index dataframe
@@ -73,22 +75,13 @@ def NASDAQ():
 
 
 def main():
-  ### PREDEFINED DATASETS ####
-  
-  # TODO: Add a UI window for 
-  # Choosing a symbols list
-  # Start date for price history
-  # End date for price history (default should be today())
-  # Date on wich to start applying the  strategy (should be between start and end date of price history)
-  # Cash amount to start simulation
-  # The broker's basic commission fee
-  
-  ### ADJUST THIS SECTION TO USE YOUR SYMBOLS LIST ###
   #companies = ['ORCL', 'AAPL', 'GATEU']
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
   #companies = ARKK_fund_list
   companies = NASDAQ_groups["transportation"]
+
+  GUI.show_gui()
 
   print(f"Fetching price data for {len(companies)} symbols")
   start_of_price_data   = "2018-01-01"                                                            # Historical data start_date
