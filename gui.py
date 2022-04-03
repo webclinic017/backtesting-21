@@ -82,26 +82,27 @@ def layout_01():
     ]
     return title, layout
 
-def show_gui():
+def show_gui(show_gui=False):
     title, layout = layout_01()
     window = sg.Window(title, layout)
     
     input_sector = "test"
-    while True:
-        event, values = window.read()
-        if event in [sg.WIN_CLOSED, "CANCEL"]:
-            break
-        if event in ["OK"]:
-            #print(f"VALUES['-SECTOR-']: {values['-SECTOR-']}")
-            #print(f"selected item: {values['-SECTOR-'][0]}")
-            if len(values["-SECTOR-"]) > 0:
-                # Default value
-                input_sector = values["-SECTOR-"][0]
-            else:
-                input_sector = "transporation"
-            break
+    if show_gui:
+        while True:
+            event, values = window.read()
+            if event in [sg.WIN_CLOSED, "CANCEL"]:
+                break
+            if event in ["OK"]:
+                #print(f"VALUES['-SECTOR-']: {values['-SECTOR-']}")
+                #print(f"selected item: {values['-SECTOR-'][0]}")
+                if len(values["-SECTOR-"]) > 0:
+                    # Default value
+                    input_sector = values["-SECTOR-"][0]
+                else:
+                    input_sector = "transporation"
+                break
 
-    # TODO: Replace this section with inpouts from UI
+    # TODO: Replace this section with inputs from UI
     return {
             "start_historical_data":"2018-01-01",                          # Historical data start_date
             "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
@@ -112,27 +113,19 @@ def show_gui():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        show_help()
-
     run_options = None
     if "-gui" in sys.argv:
         print(f"DEBUG: Received a -gui option")
-        gui_on = True
-        run_options = show_gui()
+        run_options = show_gui(show_gui=True)
     elif "-nogui" in sys.argv:
         print(f"DEBUG: Received a -nogui option")
-        gui_on = False
-
-    if run_options is None:
-        run_options = {
-            "start_historical_data":"2018-01-01",                          # Historical data start_date
-            "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
-            "start_apply_strategy":"2021-01-01",                           # Strategy apply date (skip price data before this date)
-            "minimum_data_required":300,
-            "sector":"transporation"
-        }
-
+        run_options = show_gui(show_gui=False)
+    elif "-help" in sys.argv:
+        print(f"DEBUG: Received a -help option")
+        show_help()
+    else:
+        print(f"DEBUG: No command line arguments received")
+        run_options = show_gui(show_gui=False)
 
     print(f"DEBUG:{run_options}")
 

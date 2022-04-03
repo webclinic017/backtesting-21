@@ -1,5 +1,5 @@
 # https://backtest-rookies.com/2017/08/22/backtrader-multiple-data-feeds-indicators/
-
+import sys
 import pandas as pd
 import yfinance as yf
 import numpy as np
@@ -74,21 +74,25 @@ def NASDAQ():
 
 
 
-def main():
-  #companies = ['ORCL', 'AAPL', 'GATEU']
+def main(show_gui=False):
+  companies = ['ORCL', 'AAPL', 'GATEU']
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
   #companies = ARKK_fund_list
-  companies = NASDAQ_groups["transportation"]
+  #companies = NASDAQ_groups["transportation"]
 
-  GUI.show_gui()
+  # GIU returns default parameters to run app (display gui using -gui flag on command line)
+  gui_results = None
+  gui_results = GUI.show_gui(show_gui)
+  app_params = gui_results
 
   print(f"Fetching price data for {len(companies)} symbols")
-  start_of_price_data   = "2018-01-01"                                                            # Historical data start_date
-  end_of_price_data     = datetime.today().strftime('%Y-%m-%d')                                   # Historical data end_date
-  apply_strategy_on     = "2021-01-01"                                                            # Strategy apply date (skip price data before this date)
-  minimum_data_required = 300                                                                     # Minimum price data that must be fetched for strategy to work
-                                                                                                  # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
+  start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
+  #end_of_price_data     = datetime.today().strftime('%Y-%m-%d')         # Historical data end_date
+  end_of_price_data     = app_params["end_historical_data"]             # Historical data end_date
+  apply_strategy_on     = "2021-01-01"                                  # Strategy apply date (skip price data before this date)
+  minimum_data_required = 300                                           # Minimum price data that must be fetched for strategy to work
+                                                                        # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
   prices = get_prices_for(companies, start_date=start_of_price_data, end_date=end_of_price_data)
   
   # SETUP Backtrader portfolio info and commisions
@@ -143,5 +147,9 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  if "-gui" in sys.argv:
+    gui_switch = True
+  else:
+    gui_switch = False
+  main(show_gui=gui_switch)
 
