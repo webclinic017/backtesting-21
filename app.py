@@ -84,7 +84,16 @@ def main(show_gui=False):
   # GIU returns default parameters to run app (display gui using -gui flag on command line)
   gui_results = None
   gui_results = GUI.show_gui(show_gui)
-  app_params = gui_results
+  if gui_results == None:
+    app_params = {
+        "start_historical_data":"2018-01-01",                          # Historical data start_date
+        "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
+        "start_apply_strategy":"2021-01-01",                           # Strategy apply date (skip price data before this date)
+        "minimum_data_required":300,
+        "sector":"transporation"
+    }
+  else:
+    app_params = gui_results
 
   print(f"Fetching price data for {len(companies)} symbols")
   start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
