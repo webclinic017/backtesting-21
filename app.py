@@ -82,7 +82,6 @@ def main(show_gui=False):
   #companies = NASDAQ_groups["transportation"]
 
   # GIU returns default parameters to run app (display gui using -gui flag on command line)
-  gui_results = None
   gui_results = GUI.show_gui(show_gui)
   if gui_results == None:
     app_params = {
