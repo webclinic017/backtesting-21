@@ -81,7 +81,8 @@ def main(show_gui=False):
   #companies = ARKK_fund_list
   #companies = NASDAQ_groups["transportation"]
 
-  # GIU returns default parameters to run app (display gui using -gui flag on command line)
+  # GUI returns default parameters to run app (display gui using -gui flag on command line)
+  # Not fully implemented
   gui_results = GUI.show_gui(show_gui)
   if gui_results == None:
     app_params = {
