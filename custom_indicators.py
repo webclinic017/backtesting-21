@@ -58,4 +58,3 @@ class SuperTrend(bt.Indicator):
       else:
         self.l.super_trend[0] = self.stb.final_ub[0]
 
-#
