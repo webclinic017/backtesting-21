@@ -33,6 +33,7 @@ def sectors_group():
         "public_utilities",
         "technology",
         "transportation",
+        "ARKK Invest fund",
         "test"
     ]
     max_width = max([len(x) for x in sectors]) + 1
