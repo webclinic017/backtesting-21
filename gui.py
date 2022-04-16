@@ -131,6 +131,7 @@ def show_gui(show_gui=False):
     window = sg.Window(title, layout)
     
     input_sector = "test"
+    strategy_config = None
     if show_gui:
         while True:
             event, values = window.read()

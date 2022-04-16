@@ -75,11 +75,11 @@ def NASDAQ():
 
 
 def main(show_gui=False):
-  companies = ['ORCL', 'AAPL', 'GATEU']
+  #companies = ['ORCL', 'AAPL', 'GATEU']
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
   #companies = ARKK_fund_list
-  #companies = NASDAQ_groups["transportation"]
+  companies = NASDAQ_groups["technology"]
 
   # GUI returns default parameters to run app (display gui using -gui flag on command line)
   # Not fully implemented
