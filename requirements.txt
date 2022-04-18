@@ -1,6 +1,9 @@
 pandas_ta
 yfinance
-git+https://github.com/backtrader2/backtrader
+#git+https://github.com/backtrader2/backtrader
+backtrader
+backtrader[plotting]
+
 
 pandas
 matplotlib

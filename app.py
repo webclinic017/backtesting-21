@@ -75,11 +75,12 @@ def NASDAQ():
 
 
 def main(show_gui=False):
-  #companies = ['ORCL', 'AAPL', 'GATEU']
+  
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
   #companies = ARKK_fund_list
-  companies = NASDAQ_groups["technology"]
+  #companies = NASDAQ_groups["technology"]
+  companies = ['ORCL', 'AAPL', 'GATEU']
 
   # GUI returns default parameters to run app (display gui using -gui flag on command line)
   # Not fully implemented
@@ -115,9 +116,8 @@ def main(show_gui=False):
   # SETUP a strategy to run on our data
   cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
   
-  
   # Buy a maximum of 10% of our portfolio value on each position
-  cerebro.addsizer(bt.sizers.AllInSizer, percents=50)
+  cerebro.addsizer(bt.sizers.AllInSizer, percents=20)
   
   cerebro.addobserver(bt.observers.DrawDown)
 
@@ -129,27 +129,35 @@ def main(show_gui=False):
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:
     print(f"DEBUG: Price data fetched...")
+    plot_master_data = None
     for symbol in companies:
       price_data = prices[symbol].dropna(axis=0, how='all')
       # Get rid of invalid symbols or symbols with with insuficient historical data
       if len(price_data) > minimum_data_required:
         data = bt.feeds.PandasData(dataname=price_data)
-        cerebro.adddata(data=data, name=symbol)
+        if plot_master_data is None:
+          plot_master_data = data
+          cerebro.adddata(data=data, name=symbol)
+        else:
+          data.plotinfo.plotmaster = plot_master_data
+          cerebro.adddata(data=data, name=symbol)
         print(f"Added datafeed for {symbol}, {len(price_data)}")
   else:
     print(f"Aborted: No price data fetched, please check ticker symbols")
   
-  thestrats = cerebro.run()
-  print(f"TheStrats: {len(thestrats)}\n")
-  for thestart in thestrats:
-    thestrat = thestrats[0]
-    print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
+
+  if prices is not None:
+    thestrats = cerebro.run()
+    print(f"TheStrats: {len(thestrats)}\n")
+    for thestart in thestrats:
+      thestrat = thestrats[0]
+      print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
 
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
 
   # Plotting only works with a few companies
-  #cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
+  cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
   #cerebro.plot()
 
   print(f"End of backtest")
@@ -160,5 +168,6 @@ if __name__ == "__main__":
     gui_switch = True
   else:
     gui_switch = False
+    
   main(show_gui=gui_switch)
 

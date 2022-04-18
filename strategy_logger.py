@@ -83,7 +83,7 @@ class StrategyLogger():
       order_size_str   = f""
       order_value_str  = f""
       order_comm_str   = f""
-  
+
     sep = self.seperator
     empty_str = ""
     # TODO: Implement log_str for indicators based in keys available in indicators data

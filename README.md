@@ -43,7 +43,7 @@ or
   
 tip: removing all packages from virtual environment  
 - ``pip freeze > remove.txt``  
-- ``pip install``  
+- ``pip uninstall -r remove.txt -y``  
   
   
 ## Running
