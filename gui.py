@@ -3,7 +3,6 @@ import PySimpleGUI as sg        # https://github.com/PySimpleGUI/PySimpleGUI/tre
 
 from datetime import datetime
 
-
 def show_help():
     help_str  = f"\n"
     help_str += f"Usage:\n"
