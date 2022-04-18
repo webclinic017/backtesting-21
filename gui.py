@@ -136,7 +136,7 @@ def get_forms_values_from_gui(event, values):
         "end_apply_strategy":input_buy_end,
         "minimum_data_required":input_min_data,
         "start_cash":input_cash,
-        "commision":input_commission
+        "commission":input_commission
     }
     return form_values
 
