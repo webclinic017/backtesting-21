@@ -28,7 +28,6 @@ def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None):
   else:
     return None
 
-
 def ARKK_funds():
   # Innovation fund companies listed
   ARKK_fund = pd.read_csv("https://raw.githubusercontent.com/poivronjaune/stock_screener/main/DATASETS/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv")
@@ -72,42 +71,58 @@ def NASDAQ():
 
   return NASDAQ_dict
 
-
-
 def main(show_gui=False):
-  
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
-  #companies = ARKK_fund_list
-  #companies = NASDAQ_groups["technology"]
-  companies = ['ORCL', 'AAPL', 'GATEU']
+  test_companies = ['ORCL', 'AAPL', 'GATEU']
 
-  # GUI returns default parameters to run app (display gui using -gui flag on command line)
-  # Not fully implemented
-  gui_results = GUI.show_gui(show_gui)
-  if gui_results == None:
-    app_params = {
-        "start_historical_data":"2018-01-01",                          # Historical data start_date
-        "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
-        "start_apply_strategy":"2021-01-01",                           # Strategy apply date (skip price data before this date)
-        "minimum_data_required":300,
-        "sector":"transporation"
-    }
+  # Default backtest values
+  app_params = {
+      "start_historical_data":"2018-01-01",                          # Historical data start_date
+      "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
+      "start_apply_strategy":"2021-01-01",                           # Strategy apply date (skip price data before this date)
+      "end_apply_strategy":datetime.today().strftime('%Y-%m-%d'),
+      "minimum_data_required":300,
+      "sector":"test",
+      "start_cash":3000,
+      "commission":0.001
+  }
+  
+  # Get inout from desktop GUI
+  if show_gui == "desktop":
+    app_params = GUI.show_gui(True)
+  elif show_gui == "browser":
+    pass
+    #app_params = WEB.show_web(True)
+
+  # Setup backtest variabales to call cerebro.run()
+  start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
+  end_of_price_data     = app_params["end_historical_data"]             # Historical data end_date
+  apply_strategy_on     = app_params["start_apply_strategy"]            # Strategy apply date (skip price data before this date)
+  minimum_data_required = app_params["minimum_data_required"]           # Minimum price data that must be fetched for strategy to work
+  start_cash            = app_params["start_cash"]
+  broker_commission     = app_params["commission"]
+  
+  print(f'DEBUG main(): {app_params}')
+
+  if app_params["sector"] == "test":
+    companies = test_companies
+  elif app_params["sector"] == "ARKK Invest fund":
+    companies = ARKK_fund_list
   else:
-    app_params = gui_results
+    sector = app_params["sector"]
+    companies = NASDAQ_groups[f"{sector}"]
+
+  print(f'DEBUG main() :\n{companies}')
+  return
 
   print(f"Fetching price data for {len(companies)} symbols")
-  start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
-  #end_of_price_data     = datetime.today().strftime('%Y-%m-%d')         # Historical data end_date
-  end_of_price_data     = app_params["end_historical_data"]             # Historical data end_date
-  apply_strategy_on     = "2021-01-01"                                  # Strategy apply date (skip price data before this date)
-  minimum_data_required = 300                                           # Minimum price data that must be fetched for strategy to work
-                                                                        # Strategy will apply to least number of data (example ORCL has 300 days, GATEU has 30 days)
   prices = get_prices_for(companies, start_date=start_of_price_data, end_date=end_of_price_data)
-  
+
+
   # SETUP Backtrader portfolio info and commisions
-  cash = 3000
-  commission = 0.001
+  cash = start_cash
+  commission = broker_commission
   cerebro = bt.Cerebro()
   cerebro.broker.set_cash(cash)
   cerebro.broker.setcommission(commission=commission)
@@ -165,9 +180,9 @@ def main(show_gui=False):
 
 if __name__ == "__main__":
   if "-gui" in sys.argv:
-    gui_switch = True
+    gui_interface = "desktop"
   else:
-    gui_switch = False
+    gui_interface = None
     
-  main(show_gui=gui_switch)
+  main(show_gui=gui_interface)
 
