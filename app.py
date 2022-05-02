@@ -72,6 +72,7 @@ def NASDAQ():
   return NASDAQ_dict
 
 def main(show_gui=False):
+  # Some symbols lists
   ARKK_fund_list = ARKK_funds()
   NASDAQ_groups = NASDAQ()
   test_companies = ['ORCL', 'AAPL', 'GATEU']
@@ -93,9 +94,12 @@ def main(show_gui=False):
     app_params = GUI.show_gui(True)
   elif show_gui == "browser":
     pass
-    #app_params = WEB.show_web(True)
+    # NOT IMPLEMENTED
+    # app_params = WEB.show_web(True)
 
+  
   # Setup backtest variabales to call cerebro.run()
+  # Using default values or through an interface (Desktop Gui or WEB Gui)
   start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
   end_of_price_data     = app_params["end_historical_data"]             # Historical data end_date
   apply_strategy_on     = app_params["start_apply_strategy"]            # Strategy apply date (skip price data before this date)
@@ -103,8 +107,6 @@ def main(show_gui=False):
   start_cash            = app_params["start_cash"]
   broker_commission     = app_params["commission"]
   
-  print(f'DEBUG main(): {app_params}')
-
   if app_params["sector"] == "test":
     companies = test_companies
   elif app_params["sector"] == "ARKK Invest fund":
@@ -113,12 +115,12 @@ def main(show_gui=False):
     sector = app_params["sector"]
     companies = NASDAQ_groups[f"{sector}"]
 
-  print(f'DEBUG main() :\n{companies}')
-  return
-
+  #print(f'DEBUG main() :\n{companies}')
+  
   print(f"Fetching price data for {len(companies)} symbols")
   prices = get_prices_for(companies, start_date=start_of_price_data, end_date=end_of_price_data)
-
+  
+  #print(f'DEBUG main() :\n{prices}')
 
   # SETUP Backtrader portfolio info and commisions
   cash = start_cash
@@ -137,9 +139,9 @@ def main(show_gui=False):
   cerebro.addobserver(bt.observers.DrawDown)
 
   cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-  cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DrawDown')
-  cerebro.addanalyzer(bt.analyzers.Calmar, _name='Calmar')
-  cerebro.addanalyzer(bt.analyzers.SQN, _name='SQN')
+  cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
+  cerebro.addanalyzer(bt.analyzers.Calmar, _name='calmar')
+  cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
 
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:
@@ -166,13 +168,18 @@ def main(show_gui=False):
     print(f"TheStrats: {len(thestrats)}\n")
     for thestart in thestrats:
       thestrat = thestrats[0]
-      print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
+      #print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
+      print(f"\n")
+      print(f"Sharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()}")
+      print(f"Drawdown    : {thestrat.analyzers.drawdown.get_analysis()}")
+      print(f"Calmar      : {thestrat.analyzers.calmar.get_analysis()}")
+      print(f"SQN         : {thestrat.analyzers.sqn.get_analysis()}")
 
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
 
   # Plotting only works with a few companies
-  cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
+  # cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
   #cerebro.plot()
 
   print(f"End of backtest")

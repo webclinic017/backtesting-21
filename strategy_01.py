@@ -34,9 +34,8 @@ class strategy_01(bt.Strategy):
     if self.p.log_to_csv:
       self.csv_logger = StrategyLogger(logname="log_01", seperator=";")
 
-    
-    progress_bar_prefix = 'Indicators setup'.ljust(20, ' ')
-    progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
+    #progress_bar_prefix = 'Indicators setup'.ljust(20, ' ')
+    #progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
     
     # Keep a copy of the current data being processed in NEXT Loop
     self.price_data = None
@@ -46,10 +45,11 @@ class strategy_01(bt.Strategy):
 
     # Property to store all indicators by symbol data
     self.inds = dict()
+
     #print(f"Len of self.datas: {len(self.datas)}")
     for i, d in enumerate(self.datas):
-      progress_bar_prefix = f'Indicators {d._name.upper()}'.ljust(20, ' ')
-      progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
+      #progress_bar_prefix = f'Indicators {d._name.upper()}'.ljust(20, ' ')
+      #progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
       self.inds[d] = dict()
       self.inds[d]['ema1']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema1)  # Short EMA 20
       self.inds[d]['ema2']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema2)  # Long  EMA 200
@@ -60,8 +60,14 @@ class strategy_01(bt.Strategy):
   # STRATEGY FUNCTIONS
   def notify_order(self, order):
     order_data = order.executed if order.status in [order.Completed, order.Partial] else order.created
-    self.csv_logger.log_to_csv(max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="NOTIFY_ORDER", order=order, order_data=order_data)
-    
+    self.csv_logger.log_order_to_csv(max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="NOTIFY_ORDER", order=order, order_data=order_data)
+
+  def notify_trade(self, trade):
+    if not trade.isclosed:
+      return
+    self.csv_logger.log_trade_to_csv(trade=trade)
+    print(f"DEBUG_TRADE: {trade}")
+  
 
   def buy_conditions(self, data):
     cond_01 = data.close[0] > self.inds[data]['ema2'][0]                                                  # Price above EMA200
@@ -87,13 +93,13 @@ class strategy_01(bt.Strategy):
 
     # Loop through each data set loaded for strategy
     dt = self.datetime.date()
-    progress_bar_prefix = f'Analysing {dt.isoformat()} : None'.ljust(40, ' ')
-    progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
+    #progress_bar_prefix = f'Analysing {dt.isoformat()} : None'.ljust(40, ' ')
+    #progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
     for i, d in enumerate(self.datas):
       pos = self.getposition(d).size
     
-      progress_bar_prefix = f'Analysing {dt.isoformat()} : {d._name.upper()}'.ljust(40, ' ')
-      progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
+      #progress_bar_prefix = f'Analysing {dt.isoformat()} : {d._name.upper()}'.ljust(40, ' ')
+      #progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
 
       log_action = "BUG"
       if not pos:
@@ -117,13 +123,13 @@ class strategy_01(bt.Strategy):
           log_action = "LOG_NEXT"
 
       # Print results to csv_log   
-      self.csv_logger.log_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type=log_action)  
+      self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type=log_action)  
 
   def stop(self):
     for i, d in enumerate(self.datas):
       pos = self.getposition(d).size
       if pos:
         self.close(d)
-        self.csv_logger.log_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
+        self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
 
     self.csv_logger.close()
