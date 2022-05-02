@@ -1,5 +1,6 @@
 # Local ignores
-log_*.*
+O-log_*.*
+T-log_*.*
 remove.txt
 
 # Byte-compiled / optimized / DLL files

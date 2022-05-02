@@ -5,25 +5,34 @@ class StrategyLogger():
   # TODO: Implement a log file header that is based on the indicators that were added in the strategy
   #       Loop on the keys of the indicators data
 
-
   def __init__(self, logname="default", seperator=";"):
+    # SETUP ORDER LOG FILE
     self.header   = "date;log_type;symbol;open;high;low;close;volume;order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend"
-
-    self.filename = f"LOG_CSV\{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
+    self.order_filename = f"LOG_CSV\O-{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
     try:
-      self.log_file = open(f"{self.filename}","w")
-      self.log_file.write(f"{self.header}\n")
+      self.log_order = open(f"{self.order_filename}","w")
+      self.log_order.write(f"{self.header}\n")
       self.seperator = seperator
     except Exception as e:
-      self.log_file = None
+      self.log_order = None
+
+    # SETUP TRADES LOG FILE
+    self.trade_header = "date;ref;size;price;value;commission;pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;"
+    self.trade_filename = f"TRADES\T-{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
+    try:
+      self.log_trade = open(f"{self.trade_filename}","w")
+      self.log_trade.write(f"{self.trade_header}\n")
+      self.seperator = seperator
+    except Exception as e:
+      self.log_trade = None
+
     return
     
-  def log_to_csv(self, data=None, indicators=None, max_hold_dates= None, log_type=None, order=None, order_data=None):
-
-    ''' Logging function to produce a CSV file for later import and analysis 
+  def log_order_to_csv(self, data=None, indicators=None, max_hold_dates= None, log_type=None, order=None, order_data=None):
+    ''' Logging function to produce a CSV file of ORDERS for later import and analysis 
         date;log_type;symbol;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend
     '''
-    if self.log_file is None:
+    if self.log_order is None:
       return
 
     symbol_data = None
@@ -91,8 +100,28 @@ class StrategyLogger():
     log_str  = f"{date_str}{sep}{log_type}{sep}{symbol_str}{sep}{open_str}{sep}{high_str}{sep}{low_str}{sep}{close_str}{sep}{volume_str}{sep}"
     log_str += f"{order_ref_str}{sep}{order_name_str}{sep}{order_type_str}{sep}{order_status_str}{sep}{order_price_str}{sep}{order_size_str}{sep}{order_value_str}{sep}{order_comm_str}{sep}{max_hold_date_str}{sep}"
     log_str += f"{EMA200_str}{sep}{EMA20_str}{sep}{ATR_str}{sep}{supertrend_str}{sep}\n"
-    self.log_file.write(log_str)
+    self.log_order.write(log_str)
+
+  def log_trade_to_csv(self, trade=None):
+    ''' Logging function to produce a CSV file of TRADES for later import and analysis 
+        date;log_type;symbol;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend
+    '''
+    if self.log_trade is None:
+      return
+
+    if trade is None:
+      return
+
+    sep = self.seperator
+    date_trade = trade.data.datetime.date(0)
+    log_str  = f"{date_trade}{sep}{trade.ref}{sep}{trade.size:.2f}{sep}{trade.price:.2f}{sep}{trade.value:.2f}{sep}{trade.commission:.4f}{sep}"
+    log_str += f"{trade.pnl:.2f}{sep}{trade.pnlcomm:.4f}{sep}{trade.justopened}{sep}{trade.isopen}{sep}{trade.isclosed}{sep}"
+    log_str += f"{trade.baropen}{sep}{trade.open_datetime()}{sep}{trade.barclose}{sep}{trade.close_datetime()}{sep}{trade.barlen}{sep}"
+    log_str += f"\n"
+
+    self.log_trade.write(log_str)
 
   def close(self):
-      self.log_file.close()
+      self.log_order.close()
+      self.log_trade.close()
 #      
