@@ -17,7 +17,7 @@ class StrategyLogger():
       self.log_order = None
 
     # SETUP TRADES LOG FILE
-    self.trade_header = "date;ref;size;price;value;commission;pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;"
+    self.trade_header = "date;ref;symbol;size;price;value;commission;pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;status;buy_open;buy_close;sell_open;sell_close"
     self.trade_filename = f"TRADES\T-{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
     try:
       self.log_trade = open(f"{self.trade_filename}","w")
@@ -114,11 +114,36 @@ class StrategyLogger():
 
     sep = self.seperator
     date_trade = trade.data.datetime.date(0)
-    log_str  = f"{date_trade}{sep}{trade.ref}{sep}{trade.size:.2f}{sep}{trade.price:.2f}{sep}{trade.value:.2f}{sep}{trade.commission:.4f}{sep}"
-    log_str += f"{trade.pnl:.2f}{sep}{trade.pnlcomm:.4f}{sep}{trade.justopened}{sep}{trade.isopen}{sep}{trade.isclosed}{sep}"
-    log_str += f"{trade.baropen}{sep}{trade.open_datetime()}{sep}{trade.barclose}{sep}{trade.close_datetime()}{sep}{trade.barlen}{sep}"
-    log_str += f"\n"
+    trade_symbol = trade.data._name
+    buy_index = trade.baropen - 1
+    buy_open  = trade.data._dataname.Open[buy_index]
+    buy_close = trade.data._dataname.Close[buy_index]
 
+
+    if trade.isclosed:
+      trade_close_date = trade.close_datetime()
+      trade_close_bar  = trade.barclose
+      trade_bar_len    = trade.barlen
+      sell_index = trade.barclose - 1
+      sell_open  = trade.data._dataname.Open[sell_index]
+      sell_close = trade.data._dataname.Close[sell_index]      
+    else:
+      trade_close_date = ""
+      trade_close_bar  = ""
+      trade_bar_len    = ""
+      sell_open        = ""
+      sell_close       = ""
+
+    log_str  = f"{date_trade}{sep}{trade.ref}{sep}{trade_symbol}{sep}{trade.size:.2f}{sep}{trade.price:.2f}{sep}{trade.value:.2f}{sep}{trade.commission:.4f}{sep}"
+    log_str += f"{trade.pnl:.2f}{sep}{trade.pnlcomm:.4f}{sep}{trade.justopened}{sep}{trade.isopen}{sep}{trade.isclosed}{sep}"
+    log_str += f"{trade.baropen}{sep}{trade.open_datetime()}{sep}{trade_close_bar}{sep}{trade_close_date}{sep}{trade_bar_len}{sep}{trade.status}{sep}"
+    log_str += f"{buy_open:.2f}{sep}{buy_close:.2f}{sep}"
+    log_str += f"{sell_open}{sep}{sell_close}{sep}"
+    log_str += f"\n"
+#   self.trade_header = "date;ref;symbol;size;price;value;commission;
+#                        pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;
+#                        buy_open;buy_close;buy_size;buy_value;"
+#                        sell_open;sell_close;sell_size;sell_value
     self.log_trade.write(log_str)
 
   def close(self):

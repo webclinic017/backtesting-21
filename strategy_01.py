@@ -63,10 +63,11 @@ class strategy_01(bt.Strategy):
     self.csv_logger.log_order_to_csv(max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="NOTIFY_ORDER", order=order, order_data=order_data)
 
   def notify_trade(self, trade):
-    if not trade.isclosed:
-      return
+    #if not trade.isclosed:
+    #  return
     self.csv_logger.log_trade_to_csv(trade=trade)
-    print(f"DEBUG_TRADE: {trade}")
+    #print(f"DEBUG_PRICES:\n {trade.data.datetime.date(0)} | {trade.data._dataname.index[967-1]} | {trade.data._dataname.index[982-1]} | BuyOpen:{trade.data._dataname.Open[967-1]:.2f} | SellOpen:{trade.data._dataname.Open[982-1]:.2f} | BuyClose:{trade.data._dataname.Close[967-1]:.2f} | SellClose:{trade.data._dataname.Close[982-1]:.2f}")
+    print(f"DEBUG_TRADE :\n {trade}")
   
 
   def buy_conditions(self, data):
