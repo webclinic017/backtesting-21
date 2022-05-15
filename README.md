@@ -6,7 +6,7 @@ Partial Documentation Only!
 Constructive comments on pythonic improvements or backtrader usage are welcomed.
    
 ## Datasets
-Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screener/tree/main/DATASETS), Some predefined datasets :
+Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screener/tree/main/DATASETS), Some predefined datasets (Jan 2022) :
 - ARK Invest Innovation Fund indivudual companies
 - nasdaq_companies 
 - no_sector        
