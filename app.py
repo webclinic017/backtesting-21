@@ -1,5 +1,7 @@
 # https://backtest-rookies.com/2017/08/22/backtrader-multiple-data-feeds-indicators/
+from inspect import Attribute
 import sys
+from xmlrpc.client import Boolean
 import pandas as pd
 import yfinance as yf
 import numpy as np
@@ -13,7 +15,7 @@ import gui as GUI
 from datetime import datetime, timedelta 
 from strategy_01 import *
 
-# Extract a bunch of historical data return a multi-index dataframe
+# Extract a bunch of historical data and return a multi-index dataframe
 def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None): 
   #end_date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
   
@@ -34,7 +36,8 @@ def ARKK_funds():
   ARKK_fund.rename(columns={'ticker':'Symbol'}, inplace=True)
   ARKK_fund = ARKK_fund.dropna()
   
-  ARKK_funds = ARKK_fund["Symbol"].to_list()
+  ARKK_funds = dict()
+  ARKK_funds["ark_innovation"] = ARKK_fund["Symbol"].to_list()
 
   return ARKK_funds
 
@@ -55,51 +58,57 @@ def NASDAQ():
   transportation   = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Transportation"].copy()
 
   NASDAQ_dict = dict()
-  NASDAQ_dict["all"]               = nasdaq_companies["Symbol"].to_list()
-  NASDAQ_dict["basic_industies"]   = basic_industries["Symbol"].to_list()
-  NASDAQ_dict["capital_goods"]     = capital_goods["Symbol"].to_list()
-  NASDAQ_dict["consumer_durable"]  = consumer_durable["Symbol"].to_list()
-  NASDAQ_dict["consumer_non_dur"]  = consumer_non_dur["Symbol"].to_list()
-  NASDAQ_dict["consumer_services"] = consumer_services["Symbol"].to_list()
-  NASDAQ_dict["energy"]            = energy["Symbol"].to_list()
-  NASDAQ_dict["finance"]           = finance["Symbol"].to_list()
-  NASDAQ_dict["health_care"]       = health_care["Symbol"].to_list()
-  NASDAQ_dict["miscellaneous"]     = miscellaneous["Symbol"].to_list()
-  NASDAQ_dict["public_utilities"]  = public_utilities["Symbol"].to_list()
-  NASDAQ_dict["technology"]        = technology["Symbol"].to_list()
-  NASDAQ_dict["transportation"]    = transportation["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_all"]               = nasdaq_companies["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_basic_industies"]   = basic_industries["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_capital_goods"]     = capital_goods["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_consumer_durable"]  = consumer_durable["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_consumer_non_dur"]  = consumer_non_dur["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_consumer_services"] = consumer_services["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_energy"]            = energy["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_finance"]           = finance["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_health_care"]       = health_care["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_miscellaneous"]     = miscellaneous["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_public_utilities"]  = public_utilities["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_technology"]        = technology["Symbol"].to_list()
+  NASDAQ_dict["nasdaq_transportation"]    = transportation["Symbol"].to_list()
 
   return NASDAQ_dict
 
-def main(show_gui=False):
-  # Some symbols lists
-  ARKK_fund_list = ARKK_funds()
-  NASDAQ_groups = NASDAQ()
-  test_companies = ['ORCL', 'AAPL', 'GATEU']
+def symbols_test_list():
+  # testccompanies = ['ORCL', 'AAPL', 'GATEU']
+  manual_groups = dict()
+  manual_groups["perso_test"] = ['ORCL', 'AAPL', 'GATEU']
 
-  # Default backtest values
-  app_params = {
+  return manual_groups
+
+def default_setup():
+    app_params = {
       "start_historical_data":"2018-01-01",                          # Historical data start_date
       "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
       "start_apply_strategy":"2021-01-01",                           # Strategy apply date (skip price data before this date)
       "end_apply_strategy":datetime.today().strftime('%Y-%m-%d'),
       "minimum_data_required":300,
-      "sector":"test",
+      "sector":"perso_test",
       "start_cash":3000,
       "commission":0
-  }
+    }
+    return app_params
+
+def main(show_gui=False):
+  symbol_groups = NASDAQ() | ARKK_funds() | symbols_test_list()
+  app_params = default_setup()
   
-  # Get inout from desktop GUI
-  if show_gui == "desktop":
-    app_params = GUI.show_gui(True)
-  elif show_gui == "browser":
-    pass
-    # NOT IMPLEMENTED
-    # app_params = WEB.show_web(True)
+  # TODO: Implement UI later
+  # # Get inout from desktop GUI
+  # if show_gui == "desktop":
+  #   app_params = GUI.show_gui(True)
+  # elif show_gui == "browser":
+  #   pass
+  #   # NOT IMPLEMENTED
+  #   # app_params = WEB.show_web(True)
 
   
   # Setup backtest variabales to call cerebro.run()
-  # Using default values or through an interface (Desktop Gui or WEB Gui)
   start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
   end_of_price_data     = app_params["end_historical_data"]             # Historical data end_date
   apply_strategy_on     = app_params["start_apply_strategy"]            # Strategy apply date (skip price data before this date)
@@ -107,24 +116,14 @@ def main(show_gui=False):
   start_cash            = app_params["start_cash"]
   broker_commission     = app_params["commission"]
   
-  if app_params["sector"] == "test":
-    companies = test_companies
-  elif app_params["sector"] == "ARKK Invest fund":
-    companies = ARKK_fund_list
-  else:
-    sector = app_params["sector"]
-    companies = NASDAQ_groups[f"{sector}"]
-
-  #print(f'DEBUG main() :\n{companies}')
-  
+  companies = symbol_groups[app_params['sector']]
   print(f"Fetching price data for {len(companies)} symbols")
   prices = get_prices_for(companies, start_date=start_of_price_data, end_date=end_of_price_data)
   
-  #print(f'DEBUG main() :\n{prices}')
-
   # SETUP Backtrader portfolio info and commisions
   cash = start_cash
   commission = broker_commission
+
   cerebro = bt.Cerebro(tradehistory=True)
   cerebro.broker.set_cash(cash)
   cerebro.broker.setcommission(commission=commission)
@@ -136,12 +135,11 @@ def main(show_gui=False):
   # Buy a maximum of 10% of our portfolio value on each position
   cerebro.addsizer(bt.sizers.AllInSizer, percents=20)
   
-  cerebro.addobserver(bt.observers.DrawDown)
-
-  cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-  cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
-  cerebro.addanalyzer(bt.analyzers.Calmar, _name='calmar')
-  cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
+  # cerebro.addobserver(bt.observers.DrawDown)
+  # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+  # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
+  # cerebro.addanalyzer(bt.analyzers.Calmar, _name='calmar')
+  # cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
 
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:
@@ -165,9 +163,10 @@ def main(show_gui=False):
 
   if prices is not None:
     thestrats = cerebro.run()
+    
     #print(f"TheStrats: {len(thestrats)}\n")
-    for thestart in thestrats:
-      thestrat = thestrats[0]
+    #for thestart in thestrats:
+      #thestrat = thestrats[0]
       #print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
       #print(f"\n")
       #print(f"Sharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()}")
