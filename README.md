@@ -22,14 +22,6 @@ Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screen
 - public_utilities 
 - technology       
 - transportation   
-  
-Setup your own symbol's list in test_symbols() function available un app.py.
-Add a new entry to the manuel_groups  
-  ``manual_groups["test_1"] = ['ORCL', 'AAPL', 'GATEU']``
-  ``manual_groups["yourname"] = ['symbol1', 'symbol2', 'etc..']``  
-  See [issue-19](https://github.com/poivronjaune/backtesting/issues/19) to move this feature in a config file  
-
-
 
 ## Strategy
 The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicator). Change this file to use your own strategy.  
@@ -93,6 +85,13 @@ Indicators require a minium of 200 rows of data so ``minimum_data_required``will
 The default "sector" that will be used is "test_1" from the ``test_symbols()`` function. Change this to customize your company symbols (trade tickers)
 Starting cash for strategy is set to 3000$.  
 Default commission are set to zero, this must be adjusted for your broker.  
+
+Setup your own symbol's list in test_symbols() function available un app.py.
+Add a new entry to the manuel_groups  
+  ``manual_groups["test_1"] = ['ORCL', 'AAPL', 'GATEU']``
+  ``manual_groups["yourname"] = ['symbol1', 'symbol2', 'etc..']``  
+  See [issue-19](https://github.com/poivronjaune/backtesting/issues/19) to move this feature in a config file  
+
 
   
 ## Notice
