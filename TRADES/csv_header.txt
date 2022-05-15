@@ -1,0 +1,1 @@
+date;ref;symbol;trade_status;size;price;value;commission;pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;status;buy_open;buy_close;sell_open;sell_close
