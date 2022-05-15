@@ -84,7 +84,9 @@ def default_setup():
       "minimum_data_required" : 300,
       "sector"                : "test_1",
       "start_cash"            : 3000,
-      "commission"            : 0
+      "commission"            : 0,
+      "max_hold_days"         : 10,
+      "risk_to_reward"        : 1.53
     }
     return app_params
 
@@ -109,6 +111,8 @@ def main(show_gui=False):
   minimum_data_required = app_params["minimum_data_required"]           # Minimum price data that must be fetched for strategy to work
   start_cash            = app_params["start_cash"]
   broker_commission     = app_params["commission"]
+  max_hold_days         = app_params["max_hold_days"]
+  risk_to_reward        = app_params["risk_to_reward"]
   
   companies = symbol_groups[app_params['sector']]
   print(f"Fetching price data for {len(companies)} symbols")
@@ -124,7 +128,7 @@ def main(show_gui=False):
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
-  cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
+  cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=risk_to_reward, max_hold=max_hold_days)
  
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:

@@ -164,13 +164,20 @@ class StrategyLogger():
     order_data = order.executed if order.status in [order.Completed, order.Partial, order.Cancelled, order.Expired] else order.created
     buy_dt = bt.num2date(order_data.dt).date()
     order_str += f"{buy_dt.isoformat()}{sep}"
-    order_str += f"{order_data.size:.2f}{sep}"
-    order_str += f"{order_data.price:.2f}{sep}"
-    order_str += f"{order_data.value:.2f}{sep}"
-    order_str += f"{order_data.comm:.2f}{sep}"
-    order_str += f"{order_data.pnl:.2f}{sep}"
-    order_str += f"{order_data.psize:.2f}{sep}"
-    order_str += f"{order_data.pprice:.2f}{sep}"
+    # order_str += f"{order_data.size:.2f}{sep}"
+    # order_str += f"{order_data.price:.2f}{sep}"
+    # order_str += f"{order_data.value:.2f}{sep}"
+    # order_str += f"{order_data.comm:.2f}{sep}"
+    # order_str += f"{order_data.pnl:.2f}{sep}"
+    # order_str += f"{order_data.psize:.2f}{sep}"
+    # order_str += f"{order_data.pprice:.2f}{sep}"
+    order_str += f"{order_data.size}{sep}"
+    order_str += f"{order_data.price}{sep}"
+    order_str += f"{order_data.value}{sep}"
+    order_str += f"{order_data.comm}{sep}"
+    order_str += f"{order_data.pnl}{sep}"
+    order_str += f"{order_data.psize}{sep}"
+    order_str += f"{order_data.pprice}{sep}"    
 
     # print(f"DEBUG ORDER_DATA ->\nStatus:{order.status}\ndata:{order_data}") 
     # print(f"--------------------------------------")
@@ -190,16 +197,26 @@ class StrategyLogger():
   def return_signal_data_as_csv_str(self, signal_data):
     sep = self.seperator
     signal_str  = f""
+    # signal_str += f"{signal_data.get('signal_dt')}{sep}"
+    # signal_str += f"{signal_data.get('buy_price'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('stop_loss'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('take_profit'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('max_hold_dt')}{sep}"
+    # signal_str += f"{signal_data.get('open'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('high'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('low'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('close'):.2f}{sep}"
+    # signal_str += f"{signal_data.get('volume'):.0f}{sep}"
     signal_str += f"{signal_data.get('signal_dt')}{sep}"
-    signal_str += f"{signal_data.get('buy_price'):.2f}{sep}"
-    signal_str += f"{signal_data.get('stop_loss'):.2f}{sep}"
-    signal_str += f"{signal_data.get('take_profit'):.2f}{sep}"
+    signal_str += f"{signal_data.get('buy_price')}{sep}"
+    signal_str += f"{signal_data.get('stop_loss')}{sep}"
+    signal_str += f"{signal_data.get('take_profit')}{sep}"
     signal_str += f"{signal_data.get('max_hold_dt')}{sep}"
-    signal_str += f"{signal_data.get('open'):.2f}{sep}"
-    signal_str += f"{signal_data.get('high'):.2f}{sep}"
-    signal_str += f"{signal_data.get('low'):.2f}{sep}"
-    signal_str += f"{signal_data.get('close'):.2f}{sep}"
-    signal_str += f"{signal_data.get('volume'):.0f}{sep}"
+    signal_str += f"{signal_data.get('open')}{sep}"
+    signal_str += f"{signal_data.get('high')}{sep}"
+    signal_str += f"{signal_data.get('low')}{sep}"
+    signal_str += f"{signal_data.get('close')}{sep}"
+    signal_str += f"{signal_data.get('volume')}{sep}"
 
     return signal_str
 
@@ -208,7 +225,7 @@ class StrategyLogger():
       return
 
     sep = self.seperator
-    placed_trades_header  = f"id;symbol;"
+    placed_trades_header  = f"id;symbol;cash;"
     placed_trades_header += f"market_ref;"
     placed_trades_header += f"stop_limit_ref;"
     placed_trades_header += f"take_profit_ref;"
@@ -218,6 +235,7 @@ class StrategyLogger():
     for trade in strat_trades:
       placed_trade_id = trade["id"]
       symbol          = trade["symbol"]
+      cash            = trade["cash"]
       signal_data     = trade['signal']
       buy_order       = trade['market_buy']
       stop_order      = trade['stop_limit']
@@ -228,7 +246,7 @@ class StrategyLogger():
         close_order = None
 
       # Build csv_log line using (Strategy's signal data), Bracket_Orders (Buy dat, stop_loss data, take_profit data) and Close Position data when it exists
-      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}"
+      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{cash}{sep}"
       log_str += self.return_signal_data_as_csv_str(signal_data)
       log_str += self.return_order_as_csv_string(buy_order)
       log_str += self.return_order_as_csv_string(stop_order)

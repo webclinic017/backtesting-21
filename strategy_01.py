@@ -87,6 +87,8 @@ class strategy_01(bt.Strategy):
       log_action = "BUG"  # If we see a BUG text in the log file, then investigate because something went wrong
       if not pos:
         if self.buy_conditions(d):
+          portfolio_cash = self.broker.getcash()
+          print(f"Cash available : {portfolio_cash:.2f}")
           buy_price   = d.close[0]
           stop_loss   = buy_price - 2 * self.inds[d]['atr'][0]
           take_profit = buy_price + (buy_price - stop_loss) * self.p.risk_to_reward
@@ -107,7 +109,7 @@ class strategy_01(bt.Strategy):
           orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market, valid=max_hold_date, order_field=8)          
           log_action = "LOG_BUY"
           placed_trade_id = len(self.strategy_trades[d])
-          self.strategy_trades[d].append({"id":placed_trade_id, "signal":signal_data, "symbol":d._name,"market_buy":orders[0], "stop_limit":orders[1], "take_profit":orders[2]}) 
+          self.strategy_trades[d].append({"id":placed_trade_id, "cash":portfolio_cash, "signal":signal_data, "symbol":d._name,"market_buy":orders[0], "stop_limit":orders[1], "take_profit":orders[2]}) 
           #TODO: Remove this line self.csv_logger.log_placed_order(orders = orders, strat_trades=self.strategy_trades[d])
         else:
           self.max_hold_dates[d._name] = None
