@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, date
 from wsgiref import headers
+import backtrader as bt
 
 class StrategyLogger():
 
@@ -169,14 +170,38 @@ class StrategyLogger():
 
   def return_order_as_csv_string(self, order):
     sep = self.seperator
-    #symbol_data = order.data
     #dt = symbol_data.datetime.date(0)
-
+    
     order_str  = f""
     order_str += f"{order.ref}{sep}"
     order_str += f"{order.getordername()}{sep}"
     order_str += f"{order.ordtypename()}{sep}"
     order_str += f"{order.getstatusname()}{sep}"
+    order_data = order.executed if order.status in [order.Completed, order.Partial, order.Cancelled, order.Expired] else order.created
+    # BUG : Not using the expired or canceled or executed date
+    buy_dt = bt.num2date(order_data.dt).date()
+    order_str += f"{buy_dt.isoformat()}{sep}"
+    order_str += f"{order_data.size:.2f}{sep}"
+    order_str += f"{order_data.price:.2f}{sep}"
+    order_str += f"{order_data.value:.2f}{sep}"
+    order_str += f"{order_data.comm:.2f}{sep}"
+    order_str += f"{order_data.pnl:.2f}{sep}"
+    order_str += f"{order_data.psize:.2f}{sep}"
+    order_str += f"{order_data.pprice:.2f}{sep}"
+
+    print(f"DEBUG ORDER_DATA ->\nStatus:{order.status}\ndata:{order_data}") 
+    print(f"--------------------------------------")
+    print(f"Order.Completed :{order.Completed}")
+    print(f"Order.Partial   :{order.Partial}")
+    print(f"Order.Submitted :{order.Submitted}")
+    print(f"Order.Accepted  :{order.Accepted}")
+    print(f"Order.Rejected  :{order.Rejected}")
+    print(f"Order.Margin    :{order.Margin}")
+    print(f"Order.Cancelled :{order.Cancelled }")
+    print(f"Order.Canceled  :{order.Canceled}")
+    print(f"Order.Expired   :{order.Expired}")
+    print(f"--------------------------------------\n")
+    print(f"DEBUG ORDER_DATA (Dir)\n{dir(order_data)}")
     return order_str
 
   def return_signal_data_as_csv_str(self, signal_data):
@@ -222,24 +247,19 @@ class StrategyLogger():
       log_str  = f"{placed_trade_id}{sep}{symbol}{sep}"
       log_str += self.return_signal_data_as_csv_str(signal_data)
       log_str += self.return_order_as_csv_string(buy_order)
-      #log_str += f"{stop_order.ref}{sep}"
-      #log_str += f"{target_order.ref}{sep}"
-      #if close_order is not None:
-      #  log_str += f"{close_order.ref}{sep}"
-      #else:
-      #  log_str += f"{sep}"
-      
+      log_str += self.return_order_as_csv_string(stop_order)
+      log_str += self.return_order_as_csv_string(target_order)
+
+      if close_order is not None:
+        log_str += self.return_order_as_csv_string(close_order)
   
       log_str += f"\n"
       self.log_placed.write(log_str)
 # order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;max_hold_date;
 
-    print(f"DEBUG LOG PLACED ORDER : trades type : {type(strat_trades)}, trades_len:{len(strat_trades)}")
+    #print(f"DEBUG LOG PLACED ORDER : trades type : {type(strat_trades)}, trades_len:{len(strat_trades)}")
     
     
-
-
-
   def close(self):
       self.log_order.close()
       self.log_trade.close()

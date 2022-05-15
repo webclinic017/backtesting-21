@@ -86,7 +86,7 @@ def main(show_gui=False):
       "minimum_data_required":300,
       "sector":"test",
       "start_cash":3000,
-      "commission":0.001
+      "commission":0
   }
   
   # Get inout from desktop GUI
