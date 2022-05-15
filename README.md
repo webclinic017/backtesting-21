@@ -1,7 +1,7 @@
 # Backtrader for NASDAQ stocks
 
 Work in progress...  
-This project is a learning experiment for backtesting using backtrader.  
+This project is a learning experiment for backtesting using [backtrader](https://www.backtrader.com/), a python backtesting package.  
 Partial Documentation Only!  
 Constructive comments on pythonic improvements or backtrader usage are welcomed.
    
