@@ -5,16 +5,6 @@ from strategy_logger import *
 from custom_indicators import *
 from strategy_logger import StrategyLogger
 
-# TODO: Convert this function to a class or integrate into the logger class
-def progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='>'):
-  percent       = ('{0:.' + str(decimals) + 'f}').format(100 * (iteration/float(total)))
-  filled_length = int(length * iteration // total) # // = floor when dividing
-  bar = fill * filled_length + '-' * (length - filled_length)
-  print(f'\r{prefix}[{bar}]  {percent}% {suffix}', end='')
-  if iteration == total:
-    print()
-
-
 class strategy_01(bt.Strategy):
   # self.params or self.p (are identical)
   # Stop loss set to supertrend lower band
@@ -33,10 +23,7 @@ class strategy_01(bt.Strategy):
     # Create defaut log files (TODO: adapt to create only when flags are true)
     if self.p.log_to_csv:
       self.csv_logger = StrategyLogger(logname="log_01", seperator=";")
-
-    #progress_bar_prefix = 'Indicators setup'.ljust(20, ' ')
-    #progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
-    
+ 
     # Keep a copy of the current data being processed in NEXT Loop
     self.price_data = None
 
@@ -50,8 +37,6 @@ class strategy_01(bt.Strategy):
 
     #print(f"Len of self.datas: {len(self.datas)}")
     for i, d in enumerate(self.datas):
-      #progress_bar_prefix = f'Indicators {d._name.upper()}'.ljust(20, ' ')
-      #progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=50, fill="*")
       self.inds[d] = dict()
       self.inds[d]['ema1']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema1)  # Short EMA 20
       self.inds[d]['ema2']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema2)  # Long  EMA 200
@@ -96,13 +81,8 @@ class strategy_01(bt.Strategy):
 
     # Loop through each data set loaded for strategy
     dt = self.datetime.date()
-    #progress_bar_prefix = f'Analysing {dt.isoformat()} : None'.ljust(40, ' ')
-    #progress_bar(0, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
     for i, d in enumerate(self.datas):
       pos = self.getposition(d).size
-    
-      #progress_bar_prefix = f'Analysing {dt.isoformat()} : {d._name.upper()}'.ljust(40, ' ')
-      #progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
 
       log_action = "BUG"  # If we see a BUG text in the log file, then investigate because something went wrong
       if not pos:
