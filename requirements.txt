@@ -1,13 +1,10 @@
-pandas_ta
 yfinance
-#git+https://github.com/backtrader2/backtrader
 backtrader
-backtrader[plotting]
-
 
 pandas
 matplotlib
 ipykernel
 
+# Not used but can be usefull
+pandas_ta
 pysimplegui
-#
