@@ -86,7 +86,7 @@ def main(show_gui=False):
       "minimum_data_required":300,
       "sector":"test",
       "start_cash":3000,
-      "commission":0.001
+      "commission":0
   }
   
   # Get inout from desktop GUI
@@ -125,7 +125,7 @@ def main(show_gui=False):
   # SETUP Backtrader portfolio info and commisions
   cash = start_cash
   commission = broker_commission
-  cerebro = bt.Cerebro()
+  cerebro = bt.Cerebro(tradehistory=True)
   cerebro.broker.set_cash(cash)
   cerebro.broker.setcommission(commission=commission)
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -165,15 +165,15 @@ def main(show_gui=False):
 
   if prices is not None:
     thestrats = cerebro.run()
-    print(f"TheStrats: {len(thestrats)}\n")
+    #print(f"TheStrats: {len(thestrats)}\n")
     for thestart in thestrats:
       thestrat = thestrats[0]
       #print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
-      print(f"\n")
-      print(f"Sharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()}")
-      print(f"Drawdown    : {thestrat.analyzers.drawdown.get_analysis()}")
-      print(f"Calmar      : {thestrat.analyzers.calmar.get_analysis()}")
-      print(f"SQN         : {thestrat.analyzers.sqn.get_analysis()}")
+      #print(f"\n")
+      #print(f"Sharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()}")
+      #print(f"Drawdown    : {thestrat.analyzers.drawdown.get_analysis()}")
+      #print(f"Calmar      : {thestrat.analyzers.calmar.get_analysis()}")
+      #print(f"SQN         : {thestrat.analyzers.sqn.get_analysis()}")
 
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")

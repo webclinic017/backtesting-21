@@ -43,8 +43,10 @@ class strategy_01(bt.Strategy):
     # Property to store the maximum hold date of a position by symbol data based on buy time
     self.max_hold_dates = dict()
 
+
     # Property to store all indicators by symbol data
     self.inds = dict()
+    self.strategy_trades = dict()
 
     #print(f"Len of self.datas: {len(self.datas)}")
     for i, d in enumerate(self.datas):
@@ -55,7 +57,7 @@ class strategy_01(bt.Strategy):
       self.inds[d]['ema2']       = bt.indicators.ExponentialMovingAverage(d.close, period=self.params.ema2)  # Long  EMA 200
       self.inds[d]['atr']        = bt.indicators.AverageTrueRange(d, period=self.params.atr)
       self.inds[d]['supertrend'] = SuperTrend(d, period=self.params.stperiod)
-
+      self.strategy_trades[d] = []
 
   # STRATEGY FUNCTIONS
   def notify_order(self, order):
@@ -67,7 +69,7 @@ class strategy_01(bt.Strategy):
     #  return
     self.csv_logger.log_trade_to_csv(trade=trade)
     #print(f"DEBUG_PRICES:\n {trade.data.datetime.date(0)} | {trade.data._dataname.index[967-1]} | {trade.data._dataname.index[982-1]} | BuyOpen:{trade.data._dataname.Open[967-1]:.2f} | SellOpen:{trade.data._dataname.Open[982-1]:.2f} | BuyClose:{trade.data._dataname.Close[967-1]:.2f} | SellClose:{trade.data._dataname.Close[982-1]:.2f}")
-    print(f"DEBUG_TRADE :\n {trade}")
+    #print(f"DEBUG_TRADE :\n {trade.data.LineOrder}\nDIR:{dir(trade.data)}")
   
 
   def buy_conditions(self, data):
@@ -102,28 +104,45 @@ class strategy_01(bt.Strategy):
       #progress_bar_prefix = f'Analysing {dt.isoformat()} : {d._name.upper()}'.ljust(40, ' ')
       #progress_bar(i+1, len(self.datas), prefix=progress_bar_prefix, suffix='Complete', length=75, fill="*")
 
-      log_action = "BUG"
+      log_action = "BUG"  # If we see a BUG text in the log file, then investigate because something went wrong
       if not pos:
         if self.buy_conditions(d):
           buy_price   = d.close[0]
           stop_loss   = buy_price - 2 * self.inds[d]['atr'][0]
           take_profit = buy_price + (buy_price - stop_loss) * self.p.risk_to_reward
           max_hold_date = dt + timedelta(days=self.p.max_hold)
-          self.max_hold_dates[d._name] = max_hold_date         
-          orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market, valid=max_hold_date)          
+          self.max_hold_dates[d._name] = max_hold_date
+          signal_data = {
+            "signal_dt" : dt.isoformat(),
+            "buy_price" : buy_price,
+            "stop_loss" : stop_loss,
+            "take_profit" : take_profit,
+            "max_hold_dt" : max_hold_date,
+            "open" : d.open[0],
+            "high" : d.high[0],
+            "low" : d.low[0],
+            "close" : d.close[0],
+            "volume" : d.volume[0]
+          }         
+          orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market, valid=max_hold_date, order_field=8)          
           log_action = "LOG_BUY"
+          placed_trade_id = len(self.strategy_trades[d])
+          self.strategy_trades[d].append({"id":placed_trade_id, "signal":signal_data, "symbol":d._name,"market_buy":orders[0], "stop_limit":orders[1], "take_profit":orders[2]}) 
+          #TODO: Remove this line self.csv_logger.log_placed_order(orders = orders, strat_trades=self.strategy_trades[d])
         else:
           self.max_hold_dates[d._name] = None
           log_action = "LOG_NEXT"
       else:
         if self.sell_conditions(d):
-          self.close(d)
+          order = self.close(d)
           self.max_hold_dates[d._name] = None
           log_action = "LOG_CLOSE"
+          self.strategy_trades[d][-1]["close_position"] = order
+          #TODO: Remove this line self.csv_logger.log_placed_order(orders = order, strat_trades=self.strategy_trades[d])
         else:
           log_action = "LOG_NEXT"
 
-      # Print results to csv_log   
+      # Print results to csv_log (should never have a log_action == BUG)  
       self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type=log_action)  
 
   def stop(self):
@@ -131,6 +150,7 @@ class strategy_01(bt.Strategy):
       pos = self.getposition(d).size
       if pos:
         self.close(d)
-        self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
-
+        #self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
+    
+      self.csv_logger.log_placed_order(strat_trades=self.strategy_trades[d])
     self.csv_logger.close()
