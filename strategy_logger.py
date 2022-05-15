@@ -1,54 +1,41 @@
 from datetime import datetime, timedelta, date
-from wsgiref import headers
 import backtrader as bt
 
+# VERY SPECIFIC LOGGER, Needs improvements to become generic
 class StrategyLogger():
-
-  # TODO: Implement a log file header that is based on the indicators that were added in the strategy
-  #       Loop on the keys of the indicators data
-
+  
   def __init__(self, logname="default", seperator=";"):
     # Commun seperator for all log files
     self.seperator = seperator
-    # SETUP NOTIFY_ORDER LOG FILE
-    self.header   = "date;log_type;symbol;open;high;low;close;volume;order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend"
-    self.order_filename = f"LOG_CSV\O-{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
-    try:
-      self.log_order = open(f"{self.order_filename}","w")
-      self.log_order.write(f"{self.header}\n")
-      
-    except Exception as e:
-      self.log_order = None
-
-    # SETUP TRADES LOG FILE
-    self.trade_header = "date;ref;symbol;trade_status;size;price;value;commission;pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;status;buy_open;buy_close;sell_open;sell_close"
-    self.trade_filename = f"TRADES\T-{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
-    try:
-      self.log_trade = open(f"{self.trade_filename}","w")
-      self.log_trade.write(f"{self.trade_header}\n")
-    except Exception as e:
-      self.log_trade = None
-
-    # SETUP STRATEGY PLACED_ORDER LOG FILE
-    placed_order_path = "PLACED"
-    self.placed_order_filename = f"{placed_order_path}\P-{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
-    with open(f"{placed_order_path}\csv_header.txt","r") as f:
-      header = f.read()
-      f.close()
-    placed_orders_header = header
-
-    try:
-      self.log_placed = open(f"{self.placed_order_filename}","w")
-      self.log_placed.write(f"{placed_orders_header}\n")
-    except Exception as e:
-      self.log_placed = None
+    
+    # Create log files for different purposes
+    self.log_order  = self.create_log_file("LOG_CSV", "O-log_01")
+    self.log_trade  = self.create_log_file("TRADES", "T-log_01")
+    self.log_placed = self.create_log_file("PLACED", "P-log_01")
 
     return
+
+  def create_log_file(self, log_path, logname):
+    # SETUP NOTIFY_ORDER LOG FILE
+
+    # Read CSV header string
+    with open(f"{log_path}\csv_header.txt","r") as f:
+      log_header = f.read()
+      f.close()
     
+    # Build time-stamped log filename
+    log_filename = f"{log_path}\{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
+    # Create log file and insert header line (semi-colon value seperator from self.seperator)
+    try:
+      log_file = open(f"{log_filename}","w")
+      log_file.write(f"{log_header}\n")
+    except Exception as e:
+      log_file = None
+    
+    return log_file
+
   def log_order_to_csv(self, data=None, indicators=None, max_hold_dates= None, log_type=None, order=None, order_data=None):
-    ''' Logging function to produce a CSV file of ORDERS for later import and analysis 
-        date;log_type;symbol;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend
-    '''
+    # See folder's csv_header.txt for list of columns
     if self.log_order is None:
       return
 
@@ -116,16 +103,14 @@ class StrategyLogger():
     sep = self.seperator
     empty_str = ""
     # TODO: Implement log_str for indicators based in keys available in indicators data
-    # Align string with self.header in __init_ method
     log_str  = f"{date_str}{sep}{log_type}{sep}{symbol_str}{sep}{open_str}{sep}{high_str}{sep}{low_str}{sep}{close_str}{sep}{volume_str}{sep}"
     log_str += f"{order_ref_str}{sep}{order_name_str}{sep}{order_type_str}{sep}{order_status_str}{sep}{order_price_str}{sep}{order_size_str}{sep}{order_value_str}{sep}{order_comm_str}{sep}{max_hold_date_str}{sep}"
     log_str += f"{EMA200_str}{sep}{EMA20_str}{sep}{ATR_str}{sep}{supertrend_str}{sep}{order_trade_id_str}{sep}\n"
     self.log_order.write(log_str)
 
+
   def log_trade_to_csv(self, trade=None):
-    ''' Logging function to produce a CSV file of TRADES for later import and analysis 
-        date;log_type;symbol;trade_status;open;high;low;close;volume;order_ref;order_name;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend
-    '''
+    # See folder's csv_header.txt for list of columns
     if self.log_trade is None:
       return
 
@@ -162,12 +147,10 @@ class StrategyLogger():
     log_str += f"{buy_open:.2f}{sep}{buy_close:.2f}{sep}"
     log_str += f"{sell_open}{sep}{sell_close}{sep}"
     log_str += f"\n"
-#   self.trade_header = "date;ref;symbol;size;price;value;commission;
-#                        pnl;pnlcomm;justopened;isopen;isclosed;baropen;dtopen;barclose;dtclose;barlen;
-#                        buy_open;buy_close;buy_size;buy_value;"
-#                        sell_open;sell_close;sell_size;sell_value
+
     self.log_trade.write(log_str)
 
+  # Helper functions for PLACED ORDERS csv logger
   def return_order_as_csv_string(self, order):
     sep = self.seperator
     #dt = symbol_data.datetime.date(0)
@@ -177,8 +160,8 @@ class StrategyLogger():
     order_str += f"{order.getordername()}{sep}"
     order_str += f"{order.ordtypename()}{sep}"
     order_str += f"{order.getstatusname()}{sep}"
+
     order_data = order.executed if order.status in [order.Completed, order.Partial, order.Cancelled, order.Expired] else order.created
-    # BUG : Not using the expired or canceled or executed date
     buy_dt = bt.num2date(order_data.dt).date()
     order_str += f"{buy_dt.isoformat()}{sep}"
     order_str += f"{order_data.size:.2f}{sep}"
@@ -189,19 +172,19 @@ class StrategyLogger():
     order_str += f"{order_data.psize:.2f}{sep}"
     order_str += f"{order_data.pprice:.2f}{sep}"
 
-    print(f"DEBUG ORDER_DATA ->\nStatus:{order.status}\ndata:{order_data}") 
-    print(f"--------------------------------------")
-    print(f"Order.Completed :{order.Completed}")
-    print(f"Order.Partial   :{order.Partial}")
-    print(f"Order.Submitted :{order.Submitted}")
-    print(f"Order.Accepted  :{order.Accepted}")
-    print(f"Order.Rejected  :{order.Rejected}")
-    print(f"Order.Margin    :{order.Margin}")
-    print(f"Order.Cancelled :{order.Cancelled }")
-    print(f"Order.Canceled  :{order.Canceled}")
-    print(f"Order.Expired   :{order.Expired}")
-    print(f"--------------------------------------\n")
-    print(f"DEBUG ORDER_DATA (Dir)\n{dir(order_data)}")
+    # print(f"DEBUG ORDER_DATA ->\nStatus:{order.status}\ndata:{order_data}") 
+    # print(f"--------------------------------------")
+    # print(f"Order.Completed :{order.Completed}")
+    # print(f"Order.Partial   :{order.Partial}")
+    # print(f"Order.Submitted :{order.Submitted}")
+    # print(f"Order.Accepted  :{order.Accepted}")
+    # print(f"Order.Rejected  :{order.Rejected}")
+    # print(f"Order.Margin    :{order.Margin}")
+    # print(f"Order.Cancelled :{order.Cancelled }")
+    # print(f"Order.Canceled  :{order.Canceled}")
+    # print(f"Order.Expired   :{order.Expired}")
+    # print(f"--------------------------------------\n")
+    # print(f"DEBUG ORDER_DATA (Dir)\n{dir(order_data)}")
     return order_str
 
   def return_signal_data_as_csv_str(self, signal_data):
@@ -234,30 +217,28 @@ class StrategyLogger():
 
     for trade in strat_trades:
       placed_trade_id = trade["id"]
-      symbol = trade["symbol"]
-      signal_data  = trade['signal']
-      buy_order    = trade['market_buy']
-      stop_order   = trade['stop_limit']
-      target_order = trade['take_profit']
+      symbol          = trade["symbol"]
+      signal_data     = trade['signal']
+      buy_order       = trade['market_buy']
+      stop_order      = trade['stop_limit']
+      target_order    = trade['take_profit']
       if "close_position" in trade:
         close_order = trade["close_position"]
       else:
         close_order = None
 
+      # Build csv_log line using (Strategy's signal data), Bracket_Orders (Buy dat, stop_loss data, take_profit data) and Close Position data when it exists
       log_str  = f"{placed_trade_id}{sep}{symbol}{sep}"
       log_str += self.return_signal_data_as_csv_str(signal_data)
       log_str += self.return_order_as_csv_string(buy_order)
       log_str += self.return_order_as_csv_string(stop_order)
       log_str += self.return_order_as_csv_string(target_order)
-
       if close_order is not None:
         log_str += self.return_order_as_csv_string(close_order)
-  
       log_str += f"\n"
-      self.log_placed.write(log_str)
-# order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;max_hold_date;
 
-    #print(f"DEBUG LOG PLACED ORDER : trades type : {type(strat_trades)}, trades_len:{len(strat_trades)}")
+      # Write log line to file
+      self.log_placed.write(log_str)
     
     
   def close(self):
