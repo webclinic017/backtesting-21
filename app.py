@@ -1,7 +1,5 @@
 # https://backtest-rookies.com/2017/08/22/backtrader-multiple-data-feeds-indicators/
-from inspect import Attribute
 import sys
-from xmlrpc.client import Boolean
 import pandas as pd
 import yfinance as yf
 import numpy as np
@@ -17,13 +15,9 @@ from strategy_01 import *
 
 # Extract a bunch of historical data and return a multi-index dataframe
 def get_prices_for(yahoo_symbol, start_date="2019-01-01", end_date=None): 
-  #end_date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-  
   if end_date is None:
     end_date = str(datetime.now().strftime("%Y-%m-%d"))
     
-  #yahoo_symbol = tsx_list[2]
-  #data = yf.download(yahoo_symbol,start=start_date, end=end_date, progress=False)
   data = yf.download(tickers=yahoo_symbol,start=start_date, end=end_date, progress=True, group_by='ticker')
   if len(data) > 0:
     return data
@@ -74,28 +68,28 @@ def NASDAQ():
 
   return NASDAQ_dict
 
-def symbols_test_list():
+def test_symbols():
   # testccompanies = ['ORCL', 'AAPL', 'GATEU']
   manual_groups = dict()
-  manual_groups["perso_test"] = ['ORCL', 'AAPL', 'GATEU']
+  manual_groups["test_1"] = ['ORCL', 'AAPL', 'GATEU']
 
   return manual_groups
 
 def default_setup():
     app_params = {
-      "start_historical_data":"2018-01-01",                          # Historical data start_date
-      "end_historical_data":datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
-      "start_apply_strategy":"2021-01-01",                           # Strategy apply date (skip price data before this date)
-      "end_apply_strategy":datetime.today().strftime('%Y-%m-%d'),
-      "minimum_data_required":300,
-      "sector":"perso_test",
-      "start_cash":3000,
-      "commission":0
+      "start_historical_data" : "2018-01-01",                          # Historical data start_date
+      "end_historical_data"   : datetime.today().strftime('%Y-%m-%d'),   # Historical data end_date,
+      "start_apply_strategy"  : "2021-01-01",                           # Strategy apply date (skip price data before this date)
+      "end_apply_strategy"    : datetime.today().strftime('%Y-%m-%d'),
+      "minimum_data_required" : 300,
+      "sector"                : "test_1",
+      "start_cash"            : 3000,
+      "commission"            : 0
     }
     return app_params
 
 def main(show_gui=False):
-  symbol_groups = NASDAQ() | ARKK_funds() | symbols_test_list()
+  symbol_groups = NASDAQ() | ARKK_funds() | test_symbols()
   app_params = default_setup()
   
   # TODO: Implement UI later
@@ -123,27 +117,17 @@ def main(show_gui=False):
   # SETUP Backtrader portfolio info and commisions
   cash = start_cash
   commission = broker_commission
-
   cerebro = bt.Cerebro(tradehistory=True)
   cerebro.broker.set_cash(cash)
   cerebro.broker.setcommission(commission=commission)
+  cerebro.addsizer(bt.sizers.AllInSizer, percents=20)                           
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
   cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=1.53, max_hold=20)
-  
-  # Buy a maximum of 10% of our portfolio value on each position
-  cerebro.addsizer(bt.sizers.AllInSizer, percents=20)
-  
-  # cerebro.addobserver(bt.observers.DrawDown)
-  # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-  # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
-  # cerebro.addanalyzer(bt.analyzers.Calmar, _name='calmar')
-  # cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
-
+ 
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:
-    print(f"DEBUG: Price data fetched...")
     plot_master_data = None
     for symbol in companies:
       price_data = prices[symbol].dropna(axis=0, how='all')
@@ -163,23 +147,8 @@ def main(show_gui=False):
 
   if prices is not None:
     thestrats = cerebro.run()
-    
-    #print(f"TheStrats: {len(thestrats)}\n")
-    #for thestart in thestrats:
-      #thestrat = thestrats[0]
-      #print(f"\nSharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()['sharperatio']}")
-      #print(f"\n")
-      #print(f"Sharpe Ratio: {thestrat.analyzers.mysharpe.get_analysis()}")
-      #print(f"Drawdown    : {thestrat.analyzers.drawdown.get_analysis()}")
-      #print(f"Calmar      : {thestrat.analyzers.calmar.get_analysis()}")
-      #print(f"SQN         : {thestrat.analyzers.sqn.get_analysis()}")
-
 
   print(f"\n\nEnding Portfolio Value: {cerebro.broker.getvalue()}")
-
-  # Plotting only works with a few companies
-  # cerebro.plot(start=datetime.strptime(apply_strategy_on, "%Y-%m-%d"))
-  #cerebro.plot()
 
   print(f"End of backtest")
 
