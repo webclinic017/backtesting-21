@@ -1,7 +1,9 @@
 # Local ignores
 O-log_*.*
 T-log_*.*
+P-log*.*
 remove.txt
+dir_on*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

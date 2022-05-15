@@ -1,0 +1,1 @@
+trade_id;symbol;dt_signal;signal_buy_price;signal_stop_loss;signal_profit;signal_max_hold_dt;open;high;low;close;volume;order_buy_ref;order_buy_type;order_buy_name;order_buy_status;
