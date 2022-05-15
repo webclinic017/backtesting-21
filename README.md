@@ -73,6 +73,28 @@ run ``python app.py`` (make sure folders for logs are created : LOG_CSV, PLACED,
 
 Import logs to a google sheets or a microsoft spreadsheet to analyse performance  
   
+## Parameters customisation  
+```
+def default_setup():
+    app_params = {
+      "start_historical_data" : "2018-01-01",                            
+      "end_historical_data"   : datetime.today().strftime('%Y-%m-%d'),   
+      "start_apply_strategy"  : "2021-01-01",                            
+      "end_apply_strategy"    : datetime.today().strftime('%Y-%m-%d'),
+      "minimum_data_required" : 300,
+      "sector"                : "test_1",
+      "start_cash"            : 3000,
+      "commission"            : 0
+    }  
+```    
+The default setup will retreive historical data from "2018-01-01" to today.  
+The backtest strategy will be applied strating from "2021-01-01" to today.  
+Indicators require a minium of 200 rows of data so ``minimum_data_required``will skip any asset that retreived less prices values.  
+The default "sector" that will be used is "test_1" from the ``test_symbols()`` function. Change this to customize your company symbols (trade tickers)
+Starting cash for strategy is set to 3000$.  
+Default commission are set to zero, this must be adjusted for your broker.  
+
+  
 ## Notice
 This project does not use the Backtrader built in observers or analysers as this was difficult to implement in a portfolio strategy that contains multiple assets (may upgrade this in future version)  
 
