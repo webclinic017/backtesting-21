@@ -131,8 +131,13 @@ class strategy_01(bt.Strategy):
     for i, d in enumerate(self.datas):
       pos = self.getposition(d).size
       if pos:
-        self.close(d)
-        #self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
+        order = self.close(d)
+        self.max_hold_dates[d._name] = None
+        self.strategy_trades[d][-1]["close_position"] = order
+        # log_action = "LOG_CLOSE"
+        # self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
+        print(f"Closing position :  {d._name}")
     
       self.csv_logger.log_placed_order(strat_trades=self.strategy_trades[d])
+    
     self.csv_logger.close()

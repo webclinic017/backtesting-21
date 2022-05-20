@@ -84,7 +84,7 @@ def default_setup():
       "minimum_data_required" : 300,
       "sector"                : "test_1",
       "start_cash"            : 3000,
-      "commission"            : 0,
+      "commission"            : 0.001,
       "max_hold_days"         : 10,
       "risk_to_reward"        : 1.53
     }

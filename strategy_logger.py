@@ -150,7 +150,13 @@ class StrategyLogger():
 
     self.log_trade.write(log_str)
 
-  # Helper functions for PLACED ORDERS csv logger
+  ###########################################################
+  # Helper functions for PLACED ORDERS csv logger           #
+  ###########################################################
+  def extract_order_details(self, order):
+    order_data = order.executed if order.status in [order.Completed, order.Partial, order.Cancelled, order.Expired] else order.created
+    return order_data
+  
   def return_order_as_csv_string(self, order):
     sep = self.seperator
     #dt = symbol_data.datetime.date(0)
@@ -161,7 +167,8 @@ class StrategyLogger():
     order_str += f"{order.ordtypename()}{sep}"
     order_str += f"{order.getstatusname()}{sep}"
 
-    order_data = order.executed if order.status in [order.Completed, order.Partial, order.Cancelled, order.Expired] else order.created
+    #order_data = order.executed if order.status in [order.Completed, order.Partial, order.Cancelled, order.Expired] else order.created
+    order_data = self.extract_order_details(order)
     buy_dt = bt.num2date(order_data.dt).date()
     order_str += f"{buy_dt.isoformat()}{sep}"
     # order_str += f"{order_data.size:.2f}{sep}"
@@ -220,22 +227,35 @@ class StrategyLogger():
 
     return signal_str
 
+  def return_trade_dollars(self, order=None):
+    if order is not None:
+      order_details = self.extract_order_details(order)
+      #trade_value = order_details.value if order.getstatusname() == 'Completed' else 0
+      trade_value = order_details.size * order_details.price if order.getstatusname() == 'Completed' else 0
+      trade_comm  = order_details.comm  if order.getstatusname() == 'Completed' else 0
+      trade_pnl   = order_details.pnl   if order.getstatusname() == 'Completed' else 0
+    else:
+      trade_value = 0
+      trade_comm  = 0
+      trade_pnl   = 0
+    
+    return trade_value, trade_comm, trade_pnl
+
   def log_placed_order(self, strat_trades=None):
     if strat_trades is None:
       return
 
     sep = self.seperator
-    placed_trades_header  = f"id;symbol;cash;"
-    placed_trades_header += f"market_ref;"
-    placed_trades_header += f"stop_limit_ref;"
-    placed_trades_header += f"take_profit_ref;"
-    placed_trades_header += f"\n"
+    # placed_trades_header  = f"id;symbol;cash;"
+    # placed_trades_header += f"market_ref;"
+    # placed_trades_header += f"stop_limit_ref;"
+    # placed_trades_header += f"take_profit_ref;"
+    # placed_trades_header += f"\n"
     #self.log_placed.write(placed_trades_header)
 
     for trade in strat_trades:
       placed_trade_id = trade["id"]
       symbol          = trade["symbol"]
-      cash            = trade["cash"]
       signal_data     = trade['signal']
       buy_order       = trade['market_buy']
       stop_order      = trade['stop_limit']
@@ -245,8 +265,27 @@ class StrategyLogger():
       else:
         close_order = None
 
+      # Summary data
+      cash      = trade["cash"]
+      
+      trade_buy_value, trade_buy_comm, trade_buy_pnl = self.return_trade_dollars(buy_order)
+      
+      trade_stop_value, trade_stop_comm, trade_stop_pnl = self.return_trade_dollars(stop_order)
+      trade_target_value, trade_target_comm, trade_target_pnl = self.return_trade_dollars(target_order)
+      trade_close_value, trade_close_comm, trade_close_pnl = self.return_trade_dollars(close_order)
+      trade_sell_type = f"{'Stop'*bool(trade_stop_value)}{'Target'*bool(trade_target_value)}{'Close'*bool(trade_close_value)} "
+      trade_sell_value = (trade_stop_value + trade_target_value + trade_close_value) * -1
+      trade_sell_comm  = (trade_stop_comm  + trade_target_comm  + trade_close_comm)
+      trade_sell_pnl   = (trade_stop_pnl   + trade_target_pnl   + trade_close_pnl)
+      
+      trade_roi_raw  = trade_sell_value - trade_buy_value
+      trade_net_comm = trade_sell_comm  + trade_buy_comm
+      trade_roi_net  = trade_roi_raw - trade_net_comm
+
       # Build csv_log line using (Strategy's signal data), Bracket_Orders (Buy dat, stop_loss data, take_profit data) and Close Position data when it exists
-      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{cash}{sep}"
+      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{cash}{sep}{trade_buy_value}{sep}{trade_buy_comm}{sep}{trade_buy_pnl}{sep}"
+      log_str += f"{trade_sell_type}{sep}{trade_sell_value}{sep}{trade_sell_comm}{sep}{trade_sell_pnl}{sep}"
+      log_str += f"{trade_roi_raw}{sep}{trade_net_comm}{sep}{trade_roi_net}{sep}"
       log_str += self.return_signal_data_as_csv_str(signal_data)
       log_str += self.return_order_as_csv_string(buy_order)
       log_str += self.return_order_as_csv_string(stop_order)
