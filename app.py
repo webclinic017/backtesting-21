@@ -128,7 +128,21 @@ def main(show_gui=False):
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
-  cerebro.addstrategy(strategy_01, apply_date=apply_strategy_on, risk_to_reward=risk_to_reward, max_hold=max_hold_days)
+  cerebro.addstrategy(strategy_01, 
+    start_historical_data=start_of_price_data,
+    end_historical_data=end_of_price_data,
+    apply_date=apply_strategy_on, 
+    minimum_data_required=minimum_data_required,
+    start_cash=start_cash,
+    broker_commission=broker_commission,
+    risk_to_reward=risk_to_reward, 
+    max_hold=max_hold_days,
+    ema1=20,
+    ema2=200,
+    atr=14,
+    stperiod=10,
+    log_to_csv=True
+  )
  
   # ADD DATA FEEDS TO BACKTRADER
   if prices is not None:

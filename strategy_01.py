@@ -8,21 +8,37 @@ from strategy_logger import StrategyLogger
 class strategy_01(bt.Strategy):
   # self.params or self.p (are identical)
   # Stop loss set to supertrend lower band
+  short_description = '''
+  
+  Strategy 01 - Supertrend
+
+  Condition 1 : Close price > ema2                        (long ema 200) -> ema long up trend
+  Condition 2 : Supertrend  < close price                 (Supertrend is up and buy state using 3 * ATR)
+  Condition 3 : (high price > ema1) & (low price < ema2)  (price crosses the short ema 20)
+  
+  '''
+  
   params = (
+      ('start_historical_data', '2018-01-01'),
+      ('end_historical_data', '2021-12-31'),
       ('apply_date', '2021-01-01'),
+      ('minimum_data_required', 300),
+      ('start_cash', 3000),
       ('risk_to_reward', 1.5),
+      ('broker_commission', 0.001),
       ('max_hold', 10),
-      ('log_to_csv', True),
       ('ema1', 20),
       ('ema2', 200),
       ('atr', 14),
       ('stperiod', 10),
+      ('log_to_csv', True),
+      ('description', short_description)
   )
 
   def __init__(self):
     # Create defaut log files (TODO: adapt to create only when flags are true)
     if self.p.log_to_csv:
-      self.csv_logger = StrategyLogger(logname="log_01", seperator=";")
+      self.csv_logger = StrategyLogger(logname="log_01", seperator=";", strat_params=self.params)
  
     # Keep a copy of the current data being processed in NEXT Loop
     self.price_data = None
@@ -83,7 +99,6 @@ class strategy_01(bt.Strategy):
     # Loop through each data set loaded for strategy
     dt = self.datetime.date()
     self.daily_cash.append({"date":dt, "cash":self.broker.getcash()})
-    print(f"{len(self.daily_cash)-1} -> {self.daily_cash[-1]}")
 
     for i, d in enumerate(self.datas):
       pos = self.getposition(d).size

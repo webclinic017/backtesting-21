@@ -4,25 +4,26 @@ import backtrader as bt
 # VERY SPECIFIC LOGGER, Needs improvements to become generic
 class StrategyLogger():
   
-  def __init__(self, logname="default", seperator=";", daily_cash_list=None):
+  def __init__(self, logname="default", seperator=";", strat_params=None):
     # Commun seperator for all log files
     self.seperator = seperator
     
     # Create log files for different purposes
     self.log_order  = self.create_log_file("LOG_CSV", "O-log_01")
-    self.log_trade  = self.create_log_file("TRADES", "T-log_01")
-    self.log_placed = self.create_log_file("PLACED", "P-log_01")
-
+    self.log_trade  = self.create_log_file("TRADES", "T-log_01" )
+    self.log_placed = self.create_log_file("PLACED", "P-log_01" )
+    self.create_log_strategy_parameters("PLACED", "P-log_01", params_list=strat_params)
+    
     return
 
-  def create_log_file(self, log_path, logname):
+  def create_log_file(self, log_path, logname, strat_params=None):
     # SETUP NOTIFY_ORDER LOG FILE
 
     # Read CSV header string
     with open(f"{log_path}\csv_header.txt","r") as f:
       log_header = f.read()
       f.close()
-    
+
     # Build time-stamped log filename
     log_filename = f"{log_path}\{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
     # Create log file and insert header line (semi-colon value seperator from self.seperator)
@@ -51,6 +52,26 @@ class StrategyLogger():
 
     log_file.close()
 
+  def create_log_strategy_parameters(self, log_path, logname, params_list=None):
+    if params_list is not None:
+      log_header = ""  
+      log_values = ""    
+      print(f"DEBUG: {params_list}")
+      for key_value in params_list._getitems():
+        log_header += f"{key_value[0]}{self.seperator}"
+        log_values += f"{key_value[1]}{self.seperator}"
+    else:
+      log_header = "#No parameters found...."
+      log_values = "#No parameters found...."
+
+    log_filename = f"{log_path}\{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}-params.csv"      
+    # Create log file and insert header line (semi-colon value seperator from self.seperator)
+    try:
+      log_file = open(f"{log_filename}","w")
+      log_file.write(f"{log_header}\n")
+      log_file.write(f"{log_values}\n")
+    except Exception as e:
+      log_file = None
 
   def log_order_to_csv(self, data=None, indicators=None, max_hold_dates= None, log_type=None, order=None, order_data=None):
     # See folder's csv_header.txt for list of columns
@@ -256,8 +277,13 @@ class StrategyLogger():
       trade_value = order_details.size * order_details.price if order.getstatusname() == 'Completed' else 0
       trade_comm  = order_details.comm  if order.getstatusname() == 'Completed' else 0
       trade_pnl   = order_details.pnl   if order.getstatusname() == 'Completed' else 0
-      cash_index  = [i for i,cash_line in enumerate(cash_data) if cash_line.get('date') == trade_date][0]
-      trade_cash  = cash_data[cash_index].get('cash')
+      try:
+        cash_index  = [i for i,cash_line in enumerate(cash_data) if cash_line.get('date') == trade_date][0]
+        trade_cash  = cash_data[cash_index].get('cash')
+      except Exception as e:
+        print("Error: {e}")
+        trade_cash = -1
+      
     else:
       trade_cash  = 0
       trade_date  = None
