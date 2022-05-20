@@ -4,7 +4,7 @@ import backtrader as bt
 # VERY SPECIFIC LOGGER, Needs improvements to become generic
 class StrategyLogger():
   
-  def __init__(self, logname="default", seperator=";"):
+  def __init__(self, logname="default", seperator=";", daily_cash_list=None):
     # Commun seperator for all log files
     self.seperator = seperator
     
@@ -33,6 +33,24 @@ class StrategyLogger():
       log_file = None
     
     return log_file
+
+  def create_cash_log(self, log_path, logname, cash_list=None):
+    if cash_list is None:
+      return
+
+    log_filename = f"{log_path}\{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}-cash.csv" 
+    try:
+      log_file = open(f"{log_filename}","w")
+      log_file.write(f"index;date;cash\n")
+    except Exception as e:
+      log_file = None
+      return
+    
+    for i,cash_line in enumerate(cash_list):
+      log_file.write(f"{i}{self.seperator}{cash_line.get('date')}{self.seperator}{cash_line.get('cash')}\n")
+
+    log_file.close()
+
 
   def log_order_to_csv(self, data=None, indicators=None, max_hold_dates= None, log_type=None, order=None, order_data=None):
     # See folder's csv_header.txt for list of columns
@@ -227,7 +245,7 @@ class StrategyLogger():
 
     return signal_str
 
-  def return_trade_dollars(self, order=None):
+  def return_trade_dollars(self, order=None, cash_data=None):
     #order_data = self.extract_order_details(order)
     #buy_dt = bt.num2date(order_data.dt).date()
     #order_str += f"{buy_dt.isoformat()}{sep}"
@@ -238,15 +256,18 @@ class StrategyLogger():
       trade_value = order_details.size * order_details.price if order.getstatusname() == 'Completed' else 0
       trade_comm  = order_details.comm  if order.getstatusname() == 'Completed' else 0
       trade_pnl   = order_details.pnl   if order.getstatusname() == 'Completed' else 0
+      cash_index  = [i for i,cash_line in enumerate(cash_data) if cash_line.get('date') == trade_date][0]
+      trade_cash  = cash_data[cash_index].get('cash')
     else:
+      trade_cash  = 0
       trade_date  = None
       trade_value = 0
       trade_comm  = 0
       trade_pnl   = 0
     
-    return trade_date, trade_value, trade_comm, trade_pnl
+    return trade_date, trade_cash, trade_value, trade_comm, trade_pnl
 
-  def log_placed_order(self, strat_trades=None):
+  def log_placed_order(self, strat_trades=None, daily_cash=None):
     if strat_trades is None:
       return
 
@@ -271,23 +292,27 @@ class StrategyLogger():
         close_order = None
 
       # Summary data
-      cash      = trade["cash"]
-      
-      trade_buy_dt, trade_buy_value, trade_buy_comm, trade_buy_pnl = self.return_trade_dollars(buy_order)
-      
-      trade_stop_dt, trade_stop_value, trade_stop_comm, trade_stop_pnl = self.return_trade_dollars(stop_order)
-      trade_target_dt, trade_target_value, trade_target_comm, trade_target_pnl = self.return_trade_dollars(target_order)
-      trade_close_dt, trade_close_value, trade_close_comm, trade_close_pnl = self.return_trade_dollars(close_order)
+      trade_buy_dt, trade_buy_cash, trade_buy_value, trade_buy_comm, trade_buy_pnl = self.return_trade_dollars(buy_order, daily_cash)
+      # Get csh value for trade_buy_date
 
+      trade_stop_dt, trade_stop_cash, trade_stop_value, trade_stop_comm, trade_stop_pnl = self.return_trade_dollars(stop_order, daily_cash)
+      trade_target_dt, trade_target_cash, trade_target_value, trade_target_comm, trade_target_pnl = self.return_trade_dollars(target_order, daily_cash)
+      trade_close_dt, trade_close_cash, trade_close_value, trade_close_comm, trade_close_pnl = self.return_trade_dollars(close_order, daily_cash)
+
+      
       trade_sell_type = f"{'Stop'*bool(trade_stop_value)}{'Target'*bool(trade_target_value)}{'Close'*bool(trade_close_value)}"
       if trade_sell_type == 'Stop':
         trade_sell_dt = trade_stop_dt
+        trade_sell_cash = trade_stop_cash
       elif trade_sell_type == 'Target':
         trade_sell_dt = trade_target_dt
+        trade_sell_cash = trade_target_cash
       elif trade_sell_type == 'Close':
         trade_sell_dt = trade_close_dt
+        trade_sell_cash = trade_close_cash
       else:
         trade_sell_dt = None
+        trade_sell_cash = 0
 
       trade_sell_value = (trade_stop_value + trade_target_value + trade_close_value) * -1
       trade_sell_comm  = (trade_stop_comm  + trade_target_comm  + trade_close_comm)
@@ -298,7 +323,7 @@ class StrategyLogger():
       trade_roi_net  = trade_roi_raw - trade_net_comm
 
       # Build csv_log line using (Strategy's signal data), Bracket_Orders (Buy dat, stop_loss data, take_profit data) and Close Position data when it exists
-      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{cash}{sep}{trade_buy_dt}{sep}{trade_buy_value}{sep}{trade_buy_comm}{sep}{trade_buy_pnl}{sep}"
+      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{trade_buy_cash}{sep}{trade_sell_cash}{sep}{trade_buy_dt}{sep}{trade_buy_value}{sep}{trade_buy_comm}{sep}{trade_buy_pnl}{sep}"
       log_str += f"{trade_sell_dt}{sep}{trade_sell_type}{sep}{trade_sell_value}{sep}{trade_sell_comm}{sep}{trade_sell_pnl}{sep}"
       log_str += f"{trade_roi_raw}{sep}{trade_net_comm}{sep}{trade_roi_net}{sep}"
       log_str += self.return_signal_data_as_csv_str(signal_data)
@@ -313,8 +338,18 @@ class StrategyLogger():
       self.log_placed.write(log_str)
     
     
-  def close(self):
+  def close(self, cash_list=None):
       self.log_order.close()
       self.log_trade.close()
       self.log_placed.close()
+
+      self.create_cash_log("PLACED", "P-Log_01", cash_list=cash_list)
+
+      #[item for item in accounts if item.get('id')==2]
+      #date1 = date(2022,5,18)
+      #daily_index = [i for i,line in enumerate(self.daily_cash) if line.get('date') == date1][0]
+      #print(f"DEBUG: {date1}, index: {daily_index}, last_date: {self.daily_cash[-1].get('date')}, equality_check: {date1 == self.daily_cash[-1].get('date')}")
+      #print(f"Line item for {date1}: {self.daily_cash[daily_index]}")
+      #print(f"Line item for next day: {self.daily_cash[daily_index+1]}")
+
 #      

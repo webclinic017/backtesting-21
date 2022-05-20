@@ -26,6 +26,7 @@ class strategy_01(bt.Strategy):
  
     # Keep a copy of the current data being processed in NEXT Loop
     self.price_data = None
+    self.daily_cash = list()
 
     # Property to store the maximum hold date of a position by symbol data based on buy time
     self.max_hold_dates = dict()
@@ -81,6 +82,9 @@ class strategy_01(bt.Strategy):
 
     # Loop through each data set loaded for strategy
     dt = self.datetime.date()
+    self.daily_cash.append({"date":dt, "cash":self.broker.getcash()})
+    print(f"{len(self.daily_cash)-1} -> {self.daily_cash[-1]}")
+
     for i, d in enumerate(self.datas):
       pos = self.getposition(d).size
 
@@ -88,7 +92,6 @@ class strategy_01(bt.Strategy):
       if not pos:
         if self.buy_conditions(d):
           portfolio_cash = self.broker.getcash()
-          print(f"Cash available : {portfolio_cash:.2f}")
           buy_price   = d.close[0]
           stop_loss   = buy_price - 2 * self.inds[d]['atr'][0]
           take_profit = buy_price + (buy_price - stop_loss) * self.p.risk_to_reward
@@ -109,7 +112,7 @@ class strategy_01(bt.Strategy):
           orders = self.buy_bracket(d, stopprice=stop_loss, limitprice=take_profit, exectype=bt.Order.Market, valid=max_hold_date, order_field=8)          
           log_action = "LOG_BUY"
           placed_trade_id = len(self.strategy_trades[d])
-          self.strategy_trades[d].append({"id":placed_trade_id, "cash":portfolio_cash, "signal":signal_data, "symbol":d._name,"market_buy":orders[0], "stop_limit":orders[1], "take_profit":orders[2]}) 
+          self.strategy_trades[d].append({"id":placed_trade_id, "buy_cash":portfolio_cash, "signal":signal_data, "symbol":d._name,"market_buy":orders[0], "stop_limit":orders[1], "take_profit":orders[2]}) 
           #TODO: Remove this line self.csv_logger.log_placed_order(orders = orders, strat_trades=self.strategy_trades[d])
         else:
           self.max_hold_dates[d._name] = None
@@ -138,6 +141,6 @@ class strategy_01(bt.Strategy):
         # self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
         print(f"Closing position :  {d._name}")
     
-      self.csv_logger.log_placed_order(strat_trades=self.strategy_trades[d])
+      self.csv_logger.log_placed_order(strat_trades=self.strategy_trades[d], daily_cash=self.daily_cash)
     
-    self.csv_logger.close()
+    self.csv_logger.close(cash_list=self.daily_cash)  
