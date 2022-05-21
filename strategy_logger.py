@@ -56,7 +56,7 @@ class StrategyLogger():
     if params_list is not None:
       log_header = ""  
       log_values = ""    
-      print(f"DEBUG: {params_list}")
+      #print(f"DEBUG: {params_list}")
       for key_value in params_list._getitems():
         log_header += f"{key_value[0]}{self.seperator}"
         log_values += f"{key_value[1]}{self.seperator}"
@@ -283,15 +283,22 @@ class StrategyLogger():
       except Exception as e:
         print("Error: {e}")
         trade_cash = -1
+      try:
+        cash_index  = [i for i,cash_line in enumerate(cash_data) if cash_line.get('date') == trade_date][0]
+        trade_cash_next_day  = cash_data[cash_index+1].get('cash')
+      except Exception as e:
+        print("Error: {e}")
+        trade_cash_next_day = 0
       
     else:
       trade_cash  = 0
+      trade_cash_next_day = 0
       trade_date  = None
       trade_value = 0
       trade_comm  = 0
       trade_pnl   = 0
     
-    return trade_date, trade_cash, trade_value, trade_comm, trade_pnl
+    return trade_date, trade_cash, trade_cash_next_day, trade_value, trade_comm, trade_pnl
 
   def log_placed_order(self, strat_trades=None, daily_cash=None):
     if strat_trades is None:
@@ -318,27 +325,31 @@ class StrategyLogger():
         close_order = None
 
       # Summary data
-      trade_buy_dt, trade_buy_cash, trade_buy_value, trade_buy_comm, trade_buy_pnl = self.return_trade_dollars(buy_order, daily_cash)
+      trade_buy_dt, trade_buy_cash, _, trade_buy_value, trade_buy_comm, trade_buy_pnl = self.return_trade_dollars(buy_order, daily_cash)
       # Get csh value for trade_buy_date
 
-      trade_stop_dt, trade_stop_cash, trade_stop_value, trade_stop_comm, trade_stop_pnl = self.return_trade_dollars(stop_order, daily_cash)
-      trade_target_dt, trade_target_cash, trade_target_value, trade_target_comm, trade_target_pnl = self.return_trade_dollars(target_order, daily_cash)
-      trade_close_dt, trade_close_cash, trade_close_value, trade_close_comm, trade_close_pnl = self.return_trade_dollars(close_order, daily_cash)
+      trade_stop_dt, trade_stop_cash, trade_stop_cash_next_day, trade_stop_value, trade_stop_comm, trade_stop_pnl = self.return_trade_dollars(stop_order, daily_cash)
+      trade_target_dt, trade_target_cash, trade_target_cash_next_day, trade_target_value, trade_target_comm, trade_target_pnl = self.return_trade_dollars(target_order, daily_cash)
+      trade_close_dt, trade_close_cash, trade_close_cash_next_day, trade_close_value, trade_close_comm, trade_close_pnl = self.return_trade_dollars(close_order, daily_cash)
 
       
       trade_sell_type = f"{'Stop'*bool(trade_stop_value)}{'Target'*bool(trade_target_value)}{'Close'*bool(trade_close_value)}"
       if trade_sell_type == 'Stop':
         trade_sell_dt = trade_stop_dt
         trade_sell_cash = trade_stop_cash
+        trade_sell_cash_next_day = trade_stop_cash_next_day
       elif trade_sell_type == 'Target':
         trade_sell_dt = trade_target_dt
         trade_sell_cash = trade_target_cash
+        trade_sell_cash_next_day = trade_target_cash_next_day
       elif trade_sell_type == 'Close':
         trade_sell_dt = trade_close_dt
         trade_sell_cash = trade_close_cash
+        trade_sell_cash_next_day = trade_close_cash_next_day
       else:
         trade_sell_dt = None
         trade_sell_cash = 0
+        trade_sell_cash_next_day = 0
 
       trade_sell_value = (trade_stop_value + trade_target_value + trade_close_value) * -1
       trade_sell_comm  = (trade_stop_comm  + trade_target_comm  + trade_close_comm)
@@ -349,7 +360,8 @@ class StrategyLogger():
       trade_roi_net  = trade_roi_raw - trade_net_comm
 
       # Build csv_log line using (Strategy's signal data), Bracket_Orders (Buy dat, stop_loss data, take_profit data) and Close Position data when it exists
-      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{trade_buy_cash}{sep}{trade_sell_cash}{sep}{trade_buy_dt}{sep}{trade_buy_value}{sep}{trade_buy_comm}{sep}{trade_buy_pnl}{sep}"
+      log_str  = f"{placed_trade_id}{sep}{symbol}{sep}{trade_buy_cash}{sep}{trade_sell_cash}{sep}{trade_sell_cash_next_day}{sep}"
+      log_str += f"{trade_buy_dt}{sep}{trade_buy_value}{sep}{trade_buy_comm}{sep}{trade_buy_pnl}{sep}"
       log_str += f"{trade_sell_dt}{sep}{trade_sell_type}{sep}{trade_sell_value}{sep}{trade_sell_comm}{sep}{trade_sell_pnl}{sep}"
       log_str += f"{trade_roi_raw}{sep}{trade_net_comm}{sep}{trade_roi_net}{sep}"
       log_str += self.return_signal_data_as_csv_str(signal_data)
@@ -362,7 +374,10 @@ class StrategyLogger():
 
       # Write log line to file
       self.log_placed.write(log_str)
-    
+
+
+
+
     
   def close(self, cash_list=None):
       self.log_order.close()
@@ -371,11 +386,3 @@ class StrategyLogger():
 
       self.create_cash_log("PLACED", "P-Log_01", cash_list=cash_list)
 
-      #[item for item in accounts if item.get('id')==2]
-      #date1 = date(2022,5,18)
-      #daily_index = [i for i,line in enumerate(self.daily_cash) if line.get('date') == date1][0]
-      #print(f"DEBUG: {date1}, index: {daily_index}, last_date: {self.daily_cash[-1].get('date')}, equality_check: {date1 == self.daily_cash[-1].get('date')}")
-      #print(f"Line item for {date1}: {self.daily_cash[daily_index]}")
-      #print(f"Line item for next day: {self.daily_cash[daily_index+1]}")
-
-#      
