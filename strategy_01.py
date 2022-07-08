@@ -62,16 +62,16 @@ class strategy_01(bt.Strategy):
       self.strategy_trades[d] = []
 
   # STRATEGY FUNCTIONS
-  def notify_order(self, order):
-    order_data = order.executed if order.status in [order.Completed, order.Partial] else order.created
-    self.csv_logger.log_order_to_csv(max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="NOTIFY_ORDER", order=order, order_data=order_data)
-
-  def notify_trade(self, trade):
-    #if not trade.isclosed:
-    #  return
-    self.csv_logger.log_trade_to_csv(trade=trade)
-    #print(f"DEBUG_PRICES:\n {trade.data.datetime.date(0)} | {trade.data._dataname.index[967-1]} | {trade.data._dataname.index[982-1]} | BuyOpen:{trade.data._dataname.Open[967-1]:.2f} | SellOpen:{trade.data._dataname.Open[982-1]:.2f} | BuyClose:{trade.data._dataname.Close[967-1]:.2f} | SellClose:{trade.data._dataname.Close[982-1]:.2f}")
-    #print(f"DEBUG_TRADE :\n {trade.data.LineOrder}\nDIR:{dir(trade.data)}")
+  #def notify_order(self, order):
+  #  order_data = order.executed if order.status in [order.Completed, order.Partial] else order.created
+  #  self.csv_logger.log_order_to_csv(max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="NOTIFY_ORDER", order=order, order_data=order_data)
+#
+  #def notify_trade(self, trade):
+  #  #if not trade.isclosed:
+  #  #  return
+  #  self.csv_logger.log_trade_to_csv(trade=trade)
+  #  #print(f"DEBUG_PRICES:\n {trade.data.datetime.date(0)} | {trade.data._dataname.index[967-1]} | {trade.data._dataname.index[982-1]} | BuyOpen:{trade.data._dataname.Open[967-1]:.2f} | SellOpen:{trade.data._dataname.Open[982-1]:.2f} | BuyClose:{trade.data._dataname.Close[967-1]:.2f} | SellClose:{trade.data._dataname.Close[982-1]:.2f}")
+  #  #print(f"DEBUG_TRADE :\n {trade.data.LineOrder}\nDIR:{dir(trade.data)}")
   
 
   def buy_conditions(self, data):
@@ -128,11 +128,10 @@ class strategy_01(bt.Strategy):
           log_action = "LOG_BUY"
           placed_trade_id = len(self.strategy_trades[d])
           self.strategy_trades[d].append({"id":placed_trade_id, "buy_cash":portfolio_cash, "signal":signal_data, "symbol":d._name,"market_buy":orders[0], "stop_limit":orders[1], "take_profit":orders[2]}) 
-          #TODO: Remove this line self.csv_logger.log_placed_order(orders = orders, strat_trades=self.strategy_trades[d])
         else:
           self.max_hold_dates[d._name] = None
           log_action = "LOG_NEXT"
-      else:
+      else: # In position
         if self.sell_conditions(d):
           order = self.close(d)
           self.max_hold_dates[d._name] = None
@@ -143,7 +142,7 @@ class strategy_01(bt.Strategy):
           log_action = "LOG_NEXT"
 
       # Print results to csv_log (should never have a log_action == BUG)  
-      self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type=log_action)  
+      #self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type=log_action)  
 
   def stop(self):
     for i, d in enumerate(self.datas):

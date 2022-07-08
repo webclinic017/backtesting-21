@@ -1,1 +1,0 @@
-"date;log_type;symbol;open;high;low;close;volume;order_ref;order_name;order_type;order_status;order_price;order_size;order_value;order_commission;max_hold_date;EMA200;EMA20;ATR;SuperTrend"
