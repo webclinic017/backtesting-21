@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import pandas_ta as ta
 import backtrader as bt
 
-import gui as GUI
-
 from datetime import datetime, timedelta 
 from strategy_01 import *
 
