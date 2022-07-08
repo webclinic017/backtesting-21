@@ -6,10 +6,8 @@ Partial Documentation Only!
 Constructive comments on pythonic improvements or backtrader usage are welcomed.
    
 ## Datasets
-Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screener/tree/main/DATASETS), Some predefined datasets (Jan 2022) :
-- ARK Invest Innovation Fund indivudual companies
-- nasdaq_companies 
-- no_sector        
+Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screener/tree/main/DATASETS), Some predefined datasets (Jan 2022) for NASDAQ and ARK INVEST :
+- ark_innovation -> ARK Invest Innovation Fund indivudual companies        
 - basic_industries 
 - capital_goods    
 - consumer_durable 
@@ -21,7 +19,8 @@ Uses Datasets from [Stock Screener](https://github.com/poivronjaune/stock_screen
 - miscellaneous    
 - public_utilities 
 - technology       
-- transportation   
+- transportation  
+- test   
 
 ## Strategy
 The file ``strategy_01.py`` contains the code loop to execute the strategy (including a custom indicator). Change this file to use your own strategy.  
@@ -64,7 +63,8 @@ New strategies can be created as a seperate file and imported in the app.py, cha
 ## Running
  
   
-run ``python app.py`` (make sure a folder for logs is created to store placed trades : PLACED)
+run ``python app.py -sector test`` (make sure a folder for logs is created to store placed trades : PLACED)  
+If no ``-sector`` flag supplied will default to ``test`` sector
 
 ## Results
 - PLACED FOLDER contains 3 logs with a timestamp in filename.
