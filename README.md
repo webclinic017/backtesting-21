@@ -48,17 +48,29 @@ tip: removing all packages from virtual environment
 - ``pip freeze > remove.txt``  
 - ``pip uninstall -r remove.txt -y``  
   
-  
-## Running
+## Configuration (in code)
 The ``symbol_groups`` dictionnary contains a bunch of symbols grouped by name (considered a sector). More sectors can be added manually in the ``test_symbols()`` function.  
 
 The ``default_setup()`` function contains all the strategy's parameters.  
-The key ``"sector"`` will be used to select a group of symbols to load from the ``symbol_groups`` dictionnary. This value can be passed through a command line paramater ``py app.py -sector test`` 
+The key ``"sector"`` will be used to select a group of symbols to load from the ``symbol_groups`` dictionnary. This value can be passed through a command line paramater ``py app.py -sector test``
+
+The name of the log file is defined in the __init__() function of the ``strategy_logger.py``. Convention ``prefix-timestamp-suffix``
+- ``prefix`` : Placed trades log with strategy id (default = P-log_01)
+- ``timestamp`` : default datetime at file creation (default = year-month-dd-hours-minutes-seconds as yyyy-mm-dd-HH-MM-SS )
+- ``suffix`` : no suffix contains the placed trades log, "-params" contains the strategie's parameters and a brief description, "-cash" contains the cash value log of portfolio before each trade execution
+
+New strategies can be created as a seperate file and imported in the app.py, change the line ``cerebro.addstrategy`` to insert your specific strategy (see [backtrader documentation](https://www.backtrader.com/docu/strategy/) to define a new strategy)
+
+## Running
+ 
   
 run ``python app.py`` (make sure a folder for logs is created to store placed trades : PLACED)
 
 ## Results
-- PLACED : custom log with completed orders grouped by trade. Contains strategy's SIGNAL INFO, [BRACKET ORDER](https://www.backtrader.com/docu/order-creation-execution/bracket/bracket/) and CLOSE POSITION info when trade went longer that predfined in MAX_HOLD_DAYS
+- PLACED FOLDER contains 3 logs with a timestamp in filename.
+- ``*-params.csv`` : strategy configuration and breif description of strategy being logged
+- ``*-cash.csv`` : history of cash progression as strategy is executed on price data for multiple assets
+- ``*-csv`` : custom log with all completed orders grouped by trade. It contains the strategy's SIGNAL INFO, [BRACKET ORDER](https://www.backtrader.com/docu/order-creation-execution/bracket/bracket/) and CLOSE POSITION info when trade went longer that predfined in MAX_HOLD_DAYS
 
 Import logs to a google sheets or a microsoft spreadsheet to analyse performance.
   
