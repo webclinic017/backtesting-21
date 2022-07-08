@@ -50,20 +50,17 @@ tip: removing all packages from virtual environment
   
   
 ## Running
-The ``symbol_groups`` dictionnary contains a bunch of symbols grouped by name (considered a sector). More sectors can be added in the ``test_symbols()`` function.  
+The ``symbol_groups`` dictionnary contains a bunch of symbols grouped by name (considered a sector). More sectors can be added manually in the ``test_symbols()`` function.  
 
 The ``default_setup()`` function contains all the strategy's parameters.  
-The key ``"sector"`` will be used to select group of symbols to load from the ``symbol_groups`` dictionnary
+The key ``"sector"`` will be used to select a group of symbols to load from the ``symbol_groups`` dictionnary. This value can be passed through a command line paramater ``py app.py -sector test`` 
   
-run ``python app.py`` (make sure folders for logs are created : LOG_CSV, PLACED, TRADES)
+run ``python app.py`` (make sure a folder for logs is created to store placed trades : PLACED)
 
 ## Results
-3 LOG folders are available:
-- LOG_CSV : logs [orders_info](https://www.backtrader.com/docu/order/) including [NOTIFY_ORDER](https://www.backtrader.com/docu/strategy/) events as the strategy places orders (submitted, accepted, completed)
-- TRADES : logs all trade from NOTIFY_TRADE (see backtrader documentation [strategy](https://www.backtrader.com/docu/strategy/) and [trade info](https://www.backtrader.com/docu/trade/))
-- PLACED : custom log with completed orders grouped by trade. Contains strategy's SIGNAL INFO, [BRACKET ORDER](https://www.backtrader.com/docu/order-creation-execution/bracket/bracket/) and CLOSE POSITION info when trade went longer that predfined MAX_HOLD_DAYS
+- PLACED : custom log with completed orders grouped by trade. Contains strategy's SIGNAL INFO, [BRACKET ORDER](https://www.backtrader.com/docu/order-creation-execution/bracket/bracket/) and CLOSE POSITION info when trade went longer that predfined in MAX_HOLD_DAYS
 
-Import logs to a google sheets or a microsoft spreadsheet to analyse performance  
+Import logs to a google sheets or a microsoft spreadsheet to analyse performance.
   
 ## Parameters customisation  
 ```
@@ -74,7 +71,6 @@ def default_setup():
       "start_apply_strategy"  : "2021-01-01",                            
       "end_apply_strategy"    : datetime.today().strftime('%Y-%m-%d'),
       "minimum_data_required" : 300,
-      "sector"                : "test_1",
       "start_cash"            : 3000,
       "commission"            : 0,
       "max_hold_days"         : 10,
@@ -83,16 +79,16 @@ def default_setup():
 ```    
 The default setup will retreive historical data from "2018-01-01" to today.  
 The backtest strategy will be applied strating from "2021-01-01" to today.  
-Indicators require a minium of 200 rows of data so ``minimum_data_required``will skip any asset that retreived less prices values.  
+Indicators require a minium of 200 rows of data so ``minimum_data_required``will skip any asset that retreived less prices values tham required for indicators (ex:ema200 needs at least 200 days of data).  
 The default "sector" that will be used is "test_1" from the ``test_symbols()`` function. Change this to customize your company symbols (trade tickers)
 Starting cash for strategy is set to 3000$.  
-Default commission are set to zero, this must be adjusted for your broker.  
+Default commission is set to 0.001 (0.1%), this must be adjusted for your broker.  
 The strategy will hold it's position for a maximum of 10 days.
 The take_profit order will be set to 1.5 the stop_loss to have 1:1.5 Risk To Reward management scheme
 
-Setup your own symbol's list in test_symbols() function available un app.py.
+Setup your own symbol's list in test_symbols() function defined in app.py.
 Add a new entry to the manuel_groups  
-  ``manual_groups["test_1"] = ['ORCL', 'AAPL', 'GATEU']``
+  ``manual_groups["test"] = ['ORCL', 'AAPL', 'GATEU']``
   ``manual_groups["yourname"] = ['symbol1', 'symbol2', 'etc..']``  
   See [issue-19](https://github.com/poivronjaune/backtesting/issues/19) to move this feature in a config file  
 
