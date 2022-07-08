@@ -5,20 +5,14 @@ import backtrader as bt
 class StrategyLogger():
   
   def __init__(self, logname="default", seperator=";", strat_params=None):
-    # Commun seperator for all log files
     self.seperator = seperator
     
-    # Create log files for different purposes
-    self.log_order  = self.create_log_file("LOG_CSV", "O-log_01")
-    self.log_trade  = self.create_log_file("TRADES", "T-log_01" )
     self.log_placed = self.create_log_file("PLACED", "P-log_01" )
     self.create_log_strategy_parameters("PLACED", "P-log_01", params_list=strat_params)
     
     return
 
   def create_log_file(self, log_path, logname, strat_params=None):
-    # SETUP NOTIFY_ORDER LOG FILE
-
     # Read CSV header string
     with open(f"{log_path}\csv_header.txt","r") as f:
       log_header = f.read()
@@ -26,6 +20,7 @@ class StrategyLogger():
 
     # Build time-stamped log filename
     log_filename = f"{log_path}\{logname}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"      
+    
     # Create log file and insert header line (semi-colon value seperator from self.seperator)
     try:
       log_file = open(f"{log_filename}","w")
@@ -100,7 +95,7 @@ class StrategyLogger():
       else:
         max_hold_date_str = ''
 
-      # TODO: Replace wity a loop thourgh indicators keys
+      # TODO: Replace with a loop through indicators keys
       EMA200_str     = f"{indicators[symbol_data]['ema2'][0]:.2f}"
       EMA20_str      = f"{indicators[symbol_data]['ema1'][0]:.2f}"
       ATR_str        = f"{indicators[symbol_data]['atr'][0]:.2f}"
@@ -210,13 +205,6 @@ class StrategyLogger():
     order_data = self.extract_order_details(order)
     buy_dt = bt.num2date(order_data.dt).date()
     order_str += f"{buy_dt.isoformat()}{sep}"
-    # order_str += f"{order_data.size:.2f}{sep}"
-    # order_str += f"{order_data.price:.2f}{sep}"
-    # order_str += f"{order_data.value:.2f}{sep}"
-    # order_str += f"{order_data.comm:.2f}{sep}"
-    # order_str += f"{order_data.pnl:.2f}{sep}"
-    # order_str += f"{order_data.psize:.2f}{sep}"
-    # order_str += f"{order_data.pprice:.2f}{sep}"
     order_str += f"{order_data.size}{sep}"
     order_str += f"{order_data.price}{sep}"
     order_str += f"{order_data.value}{sep}"
@@ -243,16 +231,6 @@ class StrategyLogger():
   def return_signal_data_as_csv_str(self, signal_data):
     sep = self.seperator
     signal_str  = f""
-    # signal_str += f"{signal_data.get('signal_dt')}{sep}"
-    # signal_str += f"{signal_data.get('buy_price'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('stop_loss'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('take_profit'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('max_hold_dt')}{sep}"
-    # signal_str += f"{signal_data.get('open'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('high'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('low'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('close'):.2f}{sep}"
-    # signal_str += f"{signal_data.get('volume'):.0f}{sep}"
     signal_str += f"{signal_data.get('signal_dt')}{sep}"
     signal_str += f"{signal_data.get('buy_price')}{sep}"
     signal_str += f"{signal_data.get('stop_loss')}{sep}"
@@ -267,10 +245,7 @@ class StrategyLogger():
     return signal_str
 
   def return_trade_dollars(self, order=None, cash_data=None):
-    #order_data = self.extract_order_details(order)
-    #buy_dt = bt.num2date(order_data.dt).date()
-    #order_str += f"{buy_dt.isoformat()}{sep}"
-    
+   
     if order is not None:
       order_details = self.extract_order_details(order)
       trade_date  = bt.num2date(order_details.dt).date()
@@ -305,12 +280,6 @@ class StrategyLogger():
       return
 
     sep = self.seperator
-    # placed_trades_header  = f"id;symbol;cash;"
-    # placed_trades_header += f"market_ref;"
-    # placed_trades_header += f"stop_limit_ref;"
-    # placed_trades_header += f"take_profit_ref;"
-    # placed_trades_header += f"\n"
-    #self.log_placed.write(placed_trades_header)
 
     for trade in strat_trades:
       placed_trade_id = trade["id"]
@@ -326,7 +295,7 @@ class StrategyLogger():
 
       # Summary data
       trade_buy_dt, trade_buy_cash, _, trade_buy_value, trade_buy_comm, trade_buy_pnl = self.return_trade_dollars(buy_order, daily_cash)
-      # Get csh value for trade_buy_date
+      # Get cash value for trade_buy_date
 
       trade_stop_dt, trade_stop_cash, trade_stop_cash_next_day, trade_stop_value, trade_stop_comm, trade_stop_pnl = self.return_trade_dollars(stop_order, daily_cash)
       trade_target_dt, trade_target_cash, trade_target_cash_next_day, trade_target_value, trade_target_comm, trade_target_pnl = self.return_trade_dollars(target_order, daily_cash)
@@ -375,14 +344,8 @@ class StrategyLogger():
       # Write log line to file
       self.log_placed.write(log_str)
 
-
-
-
     
   def close(self, cash_list=None):
-      self.log_order.close()
-      self.log_trade.close()
       self.log_placed.close()
-
       self.create_cash_log("PLACED", "P-Log_01", cash_list=cash_list)
 

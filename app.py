@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import pandas_ta as ta
 import backtrader as bt
 
-import gui as GUI
-
 from datetime import datetime, timedelta 
 from strategy_01 import *
 
@@ -52,26 +50,26 @@ def NASDAQ():
   transportation   = nasdaq_companies.loc[nasdaq_companies['Sector'] == "Transportation"].copy()
 
   NASDAQ_dict = dict()
-  NASDAQ_dict["nasdaq_all"]               = nasdaq_companies["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_basic_industies"]   = basic_industries["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_capital_goods"]     = capital_goods["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_consumer_durable"]  = consumer_durable["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_consumer_non_dur"]  = consumer_non_dur["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_consumer_services"] = consumer_services["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_energy"]            = energy["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_finance"]           = finance["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_health_care"]       = health_care["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_miscellaneous"]     = miscellaneous["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_public_utilities"]  = public_utilities["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_technology"]        = technology["Symbol"].to_list()
-  NASDAQ_dict["nasdaq_transportation"]    = transportation["Symbol"].to_list()
+  NASDAQ_dict["all"]               = nasdaq_companies["Symbol"].to_list()
+  NASDAQ_dict["basic_industies"]   = basic_industries["Symbol"].to_list()
+  NASDAQ_dict["capital_goods"]     = capital_goods["Symbol"].to_list()
+  NASDAQ_dict["consumer_durable"]  = consumer_durable["Symbol"].to_list()
+  NASDAQ_dict["consumer_non_dur"]  = consumer_non_dur["Symbol"].to_list()
+  NASDAQ_dict["consumer_services"] = consumer_services["Symbol"].to_list()
+  NASDAQ_dict["energy"]            = energy["Symbol"].to_list()
+  NASDAQ_dict["finance"]           = finance["Symbol"].to_list()
+  NASDAQ_dict["health_care"]       = health_care["Symbol"].to_list()
+  NASDAQ_dict["miscellaneous"]     = miscellaneous["Symbol"].to_list()
+  NASDAQ_dict["public_utilities"]  = public_utilities["Symbol"].to_list()
+  NASDAQ_dict["technology"]        = technology["Symbol"].to_list()
+  NASDAQ_dict["transportation"]    = transportation["Symbol"].to_list()
 
   return NASDAQ_dict
 
 def test_symbols():
   # testccompanies = ['ORCL', 'AAPL', 'GATEU']
   manual_groups = dict()
-  manual_groups["test_1"] = ['ORCL', 'AAPL', 'GATEU']
+  manual_groups["test"] = ['ORCL', 'AAPL', 'GATEU']
 
   return manual_groups
 
@@ -82,7 +80,7 @@ def default_setup():
       "start_apply_strategy"  : "2021-01-01",                           # Strategy apply date (skip price data before this date)
       "end_apply_strategy"    : datetime.today().strftime('%Y-%m-%d'),
       "minimum_data_required" : 300,
-      "sector"                : "test_1",
+      #"sector"                : "test",
       "start_cash"            : 3000,
       "commission"            : 0.001,
       "max_hold_days"         : 10,
@@ -90,19 +88,14 @@ def default_setup():
     }
     return app_params
 
-def main(show_gui=False):
+def main(sector=None):
   symbol_groups = NASDAQ() | ARKK_funds() | test_symbols()
   app_params = default_setup()
+  if sector is None:
+    app_params["sector"] = "test"
+  else:
+    app_params["sector"] = sector
   
-  # TODO: Implement UI later
-  # # Get inout from desktop GUI
-  # if show_gui == "desktop":
-  #   app_params = GUI.show_gui(True)
-  # elif show_gui == "browser":
-  #   pass
-  #   # NOT IMPLEMENTED
-  #   # app_params = WEB.show_web(True)
-
   
   # Setup backtest variabales to call cerebro.run()
   start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
@@ -172,10 +165,6 @@ def main(show_gui=False):
 
 
 if __name__ == "__main__":
-  if "-gui" in sys.argv:
-    gui_interface = "desktop"
-  else:
-    gui_interface = None
-    
-  main(show_gui=gui_interface)
+  sector = None
+  main(sector=sector)
 
