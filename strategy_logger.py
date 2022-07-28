@@ -5,9 +5,9 @@ class StrategyLogger():
   
   def __init__(self, logname="default", seperator=";", strat_params=None):
     self.seperator = seperator
-    
+    self.logname = logname
     self.log_placed = self.create_log_file("PLACED", "P-log_01" )
-    self.create_log_strategy_parameters("PLACED", "P-log_01", params_list=strat_params)
+    self.create_log_strategy_parameters("PLACED", self.logname, params_list=strat_params)
     
     return
 
