@@ -5,7 +5,7 @@ from strategy_logger import *
 from custom_indicators import *
 from strategy_logger import StrategyLogger
 
-class strategy_01(bt.Strategy):
+class TradeStrategy(bt.Strategy):
   # self.params or self.p (are identical)
   # Stop loss set to supertrend lower band
   short_description = '''
@@ -60,19 +60,6 @@ class strategy_01(bt.Strategy):
       self.inds[d]['atr']        = bt.indicators.AverageTrueRange(d, period=self.params.atr)
       self.inds[d]['supertrend'] = SuperTrend(d, period=self.params.stperiod)
       self.strategy_trades[d] = []
-
-  # STRATEGY FUNCTIONS
-  #def notify_order(self, order):
-  #  order_data = order.executed if order.status in [order.Completed, order.Partial] else order.created
-  #  self.csv_logger.log_order_to_csv(max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="NOTIFY_ORDER", order=order, order_data=order_data)
-#
-  #def notify_trade(self, trade):
-  #  #if not trade.isclosed:
-  #  #  return
-  #  self.csv_logger.log_trade_to_csv(trade=trade)
-  #  #print(f"DEBUG_PRICES:\n {trade.data.datetime.date(0)} | {trade.data._dataname.index[967-1]} | {trade.data._dataname.index[982-1]} | BuyOpen:{trade.data._dataname.Open[967-1]:.2f} | SellOpen:{trade.data._dataname.Open[982-1]:.2f} | BuyClose:{trade.data._dataname.Close[967-1]:.2f} | SellClose:{trade.data._dataname.Close[982-1]:.2f}")
-  #  #print(f"DEBUG_TRADE :\n {trade.data.LineOrder}\nDIR:{dir(trade.data)}")
-  
 
   def buy_conditions(self, data):
     cond_01 = data.close[0] > self.inds[data]['ema2'][0]                                                  # Price above EMA200
@@ -141,8 +128,6 @@ class strategy_01(bt.Strategy):
         else:
           log_action = "LOG_NEXT"
 
-      # Print results to csv_log (should never have a log_action == BUG)  
-      #self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type=log_action)  
 
   def stop(self):
     for i, d in enumerate(self.datas):
@@ -151,8 +136,6 @@ class strategy_01(bt.Strategy):
         order = self.close(d)
         self.max_hold_dates[d._name] = None
         self.strategy_trades[d][-1]["close_position"] = order
-        # log_action = "LOG_CLOSE"
-        # self.csv_logger.log_order_to_csv(data=d, max_hold_dates=self.max_hold_dates, indicators=self.inds, log_type="LOG_CLOSE")
         print(f"Closing position :  {d._name}")
     
       self.csv_logger.log_placed_order(strat_trades=self.strategy_trades[d], daily_cash=self.daily_cash)
