@@ -97,6 +97,11 @@ def main(sector=None):
     app_params["sector"] = sector
   
   
+  print(f"setor: {sector}")
+  usr_input = input("Continue (y/n)?")
+  if usr_input.upper() != "Y":
+    return
+
   # Setup backtest variabales to call cerebro.run()
   start_of_price_data   = app_params["start_historical_data"]           # Historical data start_date
   end_of_price_data     = app_params["end_historical_data"]             # Historical data end_date
@@ -121,7 +126,7 @@ def main(sector=None):
   print('\n\nStarting Portfolio Value: %.2f' % cerebro.broker.getvalue())
   
   # SETUP a strategy to run on our data
-  cerebro.addstrategy(strategy_01, 
+  cerebro.addstrategy(TradeStrategy, 
     start_historical_data=start_of_price_data,
     end_historical_data=end_of_price_data,
     apply_date=apply_strategy_on, 
